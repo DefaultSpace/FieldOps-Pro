@@ -2,7 +2,12 @@
 <html lang="tr" class="dark">
 
 <head>
-    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <link rel="apple-touch-icon" href="logo.svg" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="FieldOps Pro" />
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>FieldOps Pro - Stratejik Operasyon Sistemi</title>
@@ -332,7 +337,7 @@
                     <header className="sticky top-0 z-50 h-20 glass-card px-4 flex items-center justify-between border-b border-white/5">
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-2xl bg-blue-600 overflow-hidden flex items-center justify-center shadow-xl shadow-blue-600/30">
-                                <img src="logo.png" className="w-full h-full object-cover" onError={(e) => {
+                                <img src="logo.svg" className="w-full h-full object-cover" onError={(e) => {
                                     e.target.style.display = 'none';
                                     e.target.parentNode.innerHTML = '<span class="font-black text-xl italic text-white">F</span>';
                                 }} />

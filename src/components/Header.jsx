@@ -22,15 +22,15 @@ export const Header = () => {
                 <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-blue-600 overflow-hidden flex items-center justify-center shadow-xl shadow-blue-600/30">
-                            <img src="logo.png" alt="Logo" className="w-full h-full object-cover" onError={(e) => {
+                            <img src="logo.svg" alt="Logo" className="w-full h-full object-cover" onError={(e) => {
                                 e.target.style.display = 'none';
-                                e.target.parentNode.innerHTML = '<span class="font-black text-xl italic">F</span>';
+                                e.target.parentNode.innerHTML = '<span class="font-black text-xl italic text-white text-center">F</span>';
                             }} />
                         </div>
-                        <div>
-                            <h1 className="font-black text-lg tracking-tighter leading-none italic uppercase">FieldOps <span className="text-blue-500">Pro</span></h1>
-                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">Strategic</p>
-                        </div>
+                    </div>
+                    <div>
+                        <h1 className="font-black text-lg tracking-tighter leading-none italic uppercase">FieldOps <span className="text-blue-500">Pro</span></h1>
+                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">Strategic</p>
                     </div>
                 </div>
 
