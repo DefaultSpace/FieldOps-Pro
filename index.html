@@ -188,21 +188,28 @@
             const updateJob = (id, up) => setServices(prev => prev.map(s => s.id === id ? { ...s, ...up } : s));
             const toggle = (id, st) => setServices(prev => prev.map(s => s.id === id ? { ...s, status: s.status === st ? 'pending' : st } : s));
 
-            const stats = (list = services) => list.reduce((acc, s) => {
+            const stats = (list = services) => {
                 const total = list.length;
-                if (s.status === 'done') {
-                    acc.done++; let p = 25, c = 200;
-                    if (s.plus) { p += 130; c += 500; } if (s.aksesuar) { p += 100; c += 350; } if (s.bakim) { p += 250; c += 850; acc.bakims++; }
-                    acc.prime += p; acc.ciro += c; if (s.plus || s.aksesuar || s.bakim) acc.sales++;
-                } else if (s.status === 'cancelled') acc.cancels++;
-                acc.saleRate = acc.done > 0 ? Math.round((acc.sales / acc.done) * 100) : 0;
-                acc.avg = acc.done > 0 ? Math.round(acc.prime / acc.done) : 0;
-                acc.cancelRate = total > 0 ? Math.round((acc.cancels / total) * 100) : 0;
-                acc.bakimRate = acc.done > 0 ? Math.round((acc.bakims / acc.done) * 100) : 0;
-                acc.pending = list.filter(x => x.status === 'pending').length;
-                acc.progress = (acc.done + acc.pending) > 0 ? Math.round((acc.done / (acc.done + acc.pending)) * 100) : 0;
-                return acc;
-            }, { done: 0, cancels: 0, prime: 0, ciro: 0, sales: 0, bakims: 0, pending: 0, progress: 0 });
+                const base = list.reduce((acc, s) => {
+                    if (s.status === 'done') {
+                        acc.done++; let p = 25;
+                        if (s.plus) p += 130; if (s.aksesuar) p += 100; if (s.bakim) { p += 250; acc.bakims++; }
+                        acc.prime += p; if (s.plus || s.aksesuar || s.bakim) acc.sales++;
+                    } else if (s.status === 'cancelled') acc.cancels++;
+                    return acc;
+                }, { done: 0, cancels: 0, prime: 0, sales: 0, bakims: 0 });
+
+                const pending = list.filter(x => x.status === 'pending').length;
+                return {
+                    ...base,
+                    pending,
+                    saleRate: base.done > 0 ? Math.round((base.sales / base.done) * 100) : 0,
+                    avg: base.done > 0 ? Math.round(base.prime / base.done) : 0,
+                    cancelRate: total > 0 ? Math.round((base.cancels / total) * 100) : 0,
+                    bakimRate: base.done > 0 ? Math.round((base.bakims / base.done) * 100) : 0,
+                    progress: (base.done + pending) > 0 ? Math.round((base.done / (base.done + pending)) * 100) : 0
+                };
+            };
 
             return { services, archive, locked, setLocked, addJob, updateJob, toggle, stats };
         };
@@ -324,7 +331,12 @@
                 <div className="pb-24 max-w-xl mx-auto">
                     <header className="sticky top-0 z-50 h-20 glass-card px-4 flex items-center justify-between border-b border-white/5">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-xl shadow-blue-600/30"><span className="font-black text-xl italic">F</span></div>
+                            <div className="w-10 h-10 rounded-2xl bg-blue-600 overflow-hidden flex items-center justify-center shadow-xl shadow-blue-600/30">
+                                <img src="logo.png" className="w-full h-full object-cover" onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.parentNode.innerHTML = '<span class="font-black text-xl italic text-white">F</span>';
+                                }} />
+                            </div>
                             <div><h1 className="font-black text-lg tracking-tighter leading-none italic uppercase">FieldOps <span className="text-blue-500">Pro</span></h1><p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">Strategic</p></div>
                         </div>
                         <div className="flex gap-2">

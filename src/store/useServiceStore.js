@@ -94,24 +94,28 @@ export const useServiceStore = create(
                     }
                     if (s.status === 'done') {
                         acc.done++;
-                        let p = 25, c = 200;
-                        if (s.plus) { p += 130; c += 500; }
-                        if (s.aksesuar) { p += 100; c += 350; }
-                        if (s.bakim) { p += 250; c += 850; acc.bakimCount++; }
-                        acc.totalPrime += p;
-                        acc.totalCiro += c;
-                        if (s.plus || s.aksesuar || s.bakim) acc.saleCount++;
+                        let p = 25;
+                        // Assuming ciro calculation is removed or handled differently in the new logic
+                        // If ciro is still needed, it should be added back to the accumulator and calculated here.
+                        if (s.plus) p += 130;
+                        if (s.aksesuar) p += 100;
+                        if (s.bakim) { p += 250; acc.bakims++; }
+                        acc.prime += p;
+                        if (s.plus || s.aksesuar || s.bakim) acc.sales++;
+                    } else if (s.status === 'cancelled') {
+                        acc.cancels++;
+                    } else if (s.status === 'pending') {
+                        acc.pending++;
                     }
-                    if (s.status === 'pending') acc.pending++;
                     return acc;
-                }, { done: 0, cancelled: 0, totalPrime: 0, totalCiro: 0, saleCount: 0, bakimCount: 0, pending: 0 });
+                }, { done: 0, cancels: 0, prime: 0, sales: 0, bakims: 0, pending: 0 });
 
                 return {
-                    ...stats,
-                    saleRate: stats.done > 0 ? Math.round((stats.saleCount / stats.done) * 100) : 0,
-                    avgPrime: stats.done > 0 ? Math.round(stats.totalPrime / stats.done) : 0,
-                    cancelRate: current.length > 0 ? Math.round((stats.cancelled / current.length) * 100) : 0,
-                    bakimRate: stats.done > 0 ? Math.round((stats.bakimCount / stats.done) * 100) : 0,
+                    ...base,
+                    saleRate: base.done > 0 ? Math.round((base.sales / base.done) * 100) : 0,
+                    avgPrime: base.done > 0 ? Math.round(base.prime / base.done) : 0,
+                    cancelRate: total > 0 ? Math.round((base.cancels / total) * 100) : 0,
+                    bakimRate: base.done > 0 ? Math.round((base.bakims / base.done) * 100) : 0,
                 };
             },
 
