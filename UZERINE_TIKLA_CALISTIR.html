@@ -136,7 +136,7 @@
 
         // --- STRATEGIC CONSTANTS ---
         const MAHALLE_PRIORITY = ["GÜMÜŞPALA", "DENİZKÖŞKLER", "AMBARLI", "MERKEZ", "CİHANGİR"];
-        const TIMESLOT_ORDER = ["10/12", "12/14", "14/16", "16/18"];
+        const TIMESLOT_ORDER = ["10/12", "12/14", "14/16", "16/18", "Saatsiz"];
 
         // --- UTILS ---
         const normalizePhone = (p) => {
@@ -156,9 +156,18 @@
             const active = getActiveSlot();
             const aIdx = TIMESLOT_ORDER.indexOf(active), sIdx = TIMESLOT_ORDER.indexOf(s.timeSlot);
             let score = 0;
-            if (sIdx === aIdx) score += 1000;
-            else if (sIdx < aIdx) score += 500;
-            else score += (100 - (sIdx - aIdx) * 20);
+
+            // Saatsiz işler en düşük önceliğe sahip
+            if (s.timeSlot === "Saatsiz") {
+                score = -1000; // Saatli işlerden sonra gelsin
+            } else if (sIdx === aIdx) {
+                score += 1000;
+            } else if (sIdx < aIdx) {
+                score += 500;
+            } else {
+                score += (100 - (sIdx - aIdx) * 20);
+            }
+
             const mName = s.mahalle.toUpperCase().trim(), mIdx = MAHALLE_PRIORITY.indexOf(mName);
             if (mIdx !== -1) score += (MAHALLE_PRIORITY.length - mIdx) * 10;
             return score;
@@ -306,6 +315,7 @@
             const [hist, setHist] = useState(null);
             const [form, setForm] = useState({ name: '', phone: '', mahalle: '', timeSlot: '10/12', address: '', notes: '' });
             const [search, setSearch] = useState('');
+            const [renderKey, setRenderKey] = useState(0);
 
             useEffect(() => { setTimeout(() => document.getElementById('loading').style.opacity = '0', 500); setTimeout(() => document.getElementById('loading').remove(), 1000); }, []);
 
@@ -347,13 +357,13 @@
                         <div className="flex gap-2">
                             <button onClick={() => setLocked(!locked)} className={`p-2.5 rounded-xl border ${locked ? 'bg-amber-600/20 border-amber-500/30 text-amber-500' : 'bg-slate-900 border-slate-800 text-slate-600'}`}><Icon name={locked ? 'lock' : 'unlock'} size={20} /></button>
                             <nav className="flex gap-1 bg-slate-950 p-1 rounded-2xl border border-white/5">
-                                <button onClick={() => setView('home')} className={`p-2 rounded-xl ${view === 'home' ? 'bg-blue-600' : 'text-slate-600'}`}><Icon name="layout-dashboard" size={20} /></button>
-                                <button onClick={() => setView('archive')} className={`p-2 rounded-xl ${view === 'archive' ? 'bg-slate-800' : 'text-slate-600'}`}><Icon name="bar-chart-3" size={20} /></button>
+                                <button onClick={() => { setView('home'); setRenderKey(prev => prev + 1); }} className={`p-2 rounded-xl ${view === 'home' ? 'bg-blue-600' : 'text-slate-600'}`}><Icon name="layout-dashboard" size={20} /></button>
+                                <button onClick={() => { setView('archive'); setRenderKey(prev => prev + 1); }} className={`p-2 rounded-xl ${view === 'archive' ? 'bg-slate-800' : 'text-slate-600'}`}><Icon name="bar-chart-3" size={20} /></button>
                             </nav>
                         </div>
                     </header>
 
-                    <main className="p-4">
+                    <main key={renderKey} className="p-4">
                         {view === 'home' ? (
                             <>
                                 <div className="glass-card p-5 rounded-[2.5rem] border-blue-500/20 mb-4 shadow-xl shadow-blue-900/10">
@@ -394,7 +404,7 @@
                                             e.preventDefault(); const r = addJob(form); if (r) { setHist(r); setTimeout(() => setHist(null), 7000); }
                                             setForm({ name: '', phone: '', mahalle: '', timeSlot: '10/12', address: '', notes: '' });
                                         }}>
-                                            <div className="grid grid-cols-2 gap-2"><input className="w-full bg-slate-950 p-4 border border-white/5 rounded-2xl text-[13px] font-bold" placeholder="Müşteri" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /><input className="w-full bg-slate-950 p-4 border border-white/5 rounded-2xl text-[13px] font-bold" placeholder="Tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} required /></div>
+                                            <div className="grid grid-cols-2 gap-2"><input className="w-full bg-slate-950 p-4 border border-white/5 rounded-2xl text-[13px] font-bold" placeholder="Müşteri" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /><input type="tel" inputMode="numeric" pattern="[0-9]*" className="w-full bg-slate-950 p-4 border border-white/5 rounded-2xl text-[13px] font-bold" placeholder="Tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} required /></div>
                                             <div className="grid grid-cols-2 gap-2"><input className="w-full bg-slate-950 p-4 border border-white/5 rounded-2xl text-[13px] font-bold" placeholder="Mahalle" value={form.mahalle} onChange={e => setForm({ ...form, mahalle: e.target.value })} required /><select className="w-full bg-slate-950 p-4 border border-white/5 rounded-2xl text-[13px] font-bold" value={form.timeSlot} onChange={e => setForm({ ...form, timeSlot: e.target.value })}>{TIMESLOT_ORDER.map(t => <option key={t}>{t}</option>)}</select></div>
                                             <input className="w-full bg-slate-950 p-4 border border-white/5 rounded-2xl text-[13px] font-bold" placeholder="Açık Adres" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} required />
                                             <textarea className="w-full bg-slate-950 p-4 border border-white/5 rounded-2xl text-[11px] font-bold resize-none h-20" placeholder="Stratejik Notlar..." value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
