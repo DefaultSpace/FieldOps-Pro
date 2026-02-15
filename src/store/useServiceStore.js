@@ -124,6 +124,17 @@ export const useServiceStore = create(
                 };
             },
 
+            resetSystem: () => {
+                if (confirm('Bütün veriler silinecek ve yeni bir gün başlatılacak. Emin misiniz?')) {
+                    set({
+                        services: [],
+                        archive: [],
+                        planLocked: false,
+                        lastLocation: null
+                    });
+                }
+            },
+
             exportData: () => {
                 const blob = new Blob([JSON.stringify({ s: get().services, a: get().archive })], { type: 'json' });
                 const url = URL.createObjectURL(blob);

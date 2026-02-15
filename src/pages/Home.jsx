@@ -3,12 +3,14 @@ import { useServiceStore } from '../store/useServiceStore'
 import { StatsBar } from '../components/StatsBar'
 import { ServiceForm } from '../components/ServiceForm'
 import { ServiceCard } from '../components/ServiceCard'
+import { MahalleGroup } from '../components/MahalleGroup'
 import { Navigation, Target, Zap, Clock, Search, X } from 'lucide-react'
 import { groupAndSortServices, getActiveTimeSlot, calculatePriorityScore } from '../utils/sorting'
+import { groupByMahalle } from '../utils/groupByMahalle'
 import { getMapsSearchUrl } from '../utils/maps'
 
 export const Home = () => {
-    const { services, lastLocation } = useServiceStore();
+    const { services, lastLocation, resetSystem } = useServiceStore();
     const [searchTerm, setSearchTerm] = useState('');
 
     const sortedServices = useMemo(() => groupAndSortServices(services), [services]);
@@ -27,6 +29,9 @@ export const Home = () => {
     const extra = useMemo(() => filteredServices.filter(s => s.isExtra && s.status === 'pending'), [filteredServices]);
     const postponed = useMemo(() => filteredServices.filter(s => s.status === 'postponed'), [filteredServices]);
     const completed = useMemo(() => filteredServices.filter(s => s.status !== 'pending' && s.status !== 'postponed'), [filteredServices]);
+
+    const plannedGroups = useMemo(() => groupByMahalle(planned), [planned]);
+    const extraGroups = useMemo(() => groupByMahalle(extra), [extra]);
 
     const bestJob = useMemo(() => {
         return sortedServices.find(s => s.status === 'pending');
@@ -112,8 +117,10 @@ export const Home = () => {
                 {planned.length > 0 && (
                     <section>
                         <SectionHeader label="Planlananlar" count={planned.length} color="blue" />
-                        <div className="space-y-4">
-                            {planned.map(s => <ServiceCard key={s.id} service={s} />)}
+                        <div className="space-y-8">
+                            {plannedGroups.map(group => (
+                                <MahalleGroup key={group.name} mahalleName={group.name} services={group.items} />
+                            ))}
                         </div>
                     </section>
                 )}
@@ -121,8 +128,10 @@ export const Home = () => {
                 {extra.length > 0 && (
                     <section>
                         <SectionHeader label="Ekstra Çağrılar" count={extra.length} color="amber" />
-                        <div className="space-y-4">
-                            {extra.map(s => <ServiceCard key={s.id} service={s} />)}
+                        <div className="space-y-8">
+                            {extraGroups.map(group => (
+                                <MahalleGroup key={group.name} mahalleName={group.name} services={group.items} />
+                            ))}
                         </div>
                     </section>
                 )}
@@ -152,6 +161,16 @@ export const Home = () => {
                     <p className="font-black uppercase italic tracking-widest text-sm">Sonuç Bulunamadı.</p>
                 </div>
             )}
+
+            {/* Reset Button */}
+            <div className="mt-20 mb-10 px-4">
+                <button
+                    onClick={resetSystem}
+                    className="w-full py-5 rounded-[2rem] border-2 border-rose-500/20 text-rose-500/40 hover:text-rose-500 hover:border-rose-500 transition-all font-black text-xs tracking-[0.3em] uppercase"
+                >
+                    SİSTEMİ SIFIRLA VE YENİ GÜNE BAŞLA
+                </button>
+            </div>
         </div>
     );
 };
