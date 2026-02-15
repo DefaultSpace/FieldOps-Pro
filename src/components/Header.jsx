@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Lock, Unlock, BarChart3, LayoutDashboard, Download, Navigation } from 'lucide-react'
 import { useServiceStore } from '../store/useServiceStore'
-import logo from '../logo.svg'
+import logo from '../../logo.svg'
 
 export const Header = () => {
     const navigate = useNavigate();
