@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Lock, Unlock, BarChart3, LayoutDashboard, Download, Navigation } from 'lucide-react'
 import { useServiceStore } from '../store/useServiceStore'
+import logo from '../logo.svg'
 
 export const Header = () => {
     const navigate = useNavigate();
@@ -22,7 +23,7 @@ export const Header = () => {
                 <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-blue-600 overflow-hidden flex items-center justify-center shadow-xl shadow-blue-600/30">
-                            <img src="logo.svg" alt="Logo" className="w-full h-full object-cover" onError={(e) => {
+                            <img src={logo} alt="Logo" className="w-full h-full object-cover" onError={(e) => {
                                 e.target.style.display = 'none';
                                 e.target.parentNode.innerHTML = '<span class="font-black text-xl italic text-white text-center">F</span>';
                             }} />

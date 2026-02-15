@@ -5,7 +5,7 @@ import { Archive } from './pages/Archive'
 
 function App() {
     return (
-        <Router>
+        <Router basename="/FieldOps-Pro">
             <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
                 <Header />
                 <main className="flex-1">
