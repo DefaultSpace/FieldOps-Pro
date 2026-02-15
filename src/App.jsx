@@ -1,11 +1,11 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 import { Header } from './components/Header'
 import { Home } from './pages/Home'
 import { Archive } from './pages/Archive'
 
 function App() {
     return (
-        <Router basename="/FieldOps-Pro">
+        <Router>
             <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
                 <Header />
                 <main className="flex-1">

@@ -2,7 +2,7 @@
     "name": "FieldOps Pro",
     "short_name": "FieldOps",
     "description": "Stratejik Saha Operasyon Paneli",
-    "start_url": "./index.html",
+    "start_url": "/FieldOps-Pro/",
     "display": "standalone",
     "background_color": "#020617",
     "theme_color": "#1e3a8a",
