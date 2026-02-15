@@ -1,6 +1,6 @@
 export const getMapsSearchUrl = (address) => {
-    // Use dir API with My Location as start
-    return `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${encodeURIComponent(address)}&travelmode=driving`;
+    const fullAddress = `${address}, Avcılar, İstanbul`;
+    return `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${encodeURIComponent(fullAddress)}&travelmode=driving`;
 };
 
 export const getMapsRouteUrl = (addresses) => {

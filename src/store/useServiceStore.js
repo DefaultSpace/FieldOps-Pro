@@ -46,6 +46,8 @@ export const useServiceStore = create(
                     bakim: false,
                     nps: null,
                     cancelReason: '',
+                    postponeReason: [],
+                    receiptNo: '',
                     isExtra: get().planLocked // If locked, it's an extra job
                 };
 
@@ -89,33 +91,36 @@ export const useServiceStore = create(
                 const current = get().services;
                 const stats = current.reduce((acc, s) => {
                     if (s.status === 'cancelled') {
-                        acc.cancelled++;
+                        acc.cancels++;
+                        return acc;
+                    }
+                    if (s.status === 'postponed') {
+                        acc.postponed++;
+                        acc.pending++; // Postponed counts as pending for tracking
                         return acc;
                     }
                     if (s.status === 'done') {
                         acc.done++;
                         let p = 25;
-                        // Assuming ciro calculation is removed or handled differently in the new logic
-                        // If ciro is still needed, it should be added back to the accumulator and calculated here.
                         if (s.plus) p += 130;
                         if (s.aksesuar) p += 100;
                         if (s.bakim) { p += 250; acc.bakims++; }
                         acc.prime += p;
                         if (s.plus || s.aksesuar || s.bakim) acc.sales++;
-                    } else if (s.status === 'cancelled') {
-                        acc.cancels++;
                     } else if (s.status === 'pending') {
                         acc.pending++;
                     }
                     return acc;
-                }, { done: 0, cancels: 0, prime: 0, sales: 0, bakims: 0, pending: 0 });
+                }, { done: 0, cancels: 0, postponed: 0, prime: 0, sales: 0, bakims: 0, pending: 0 });
+
+                const total = stats.done + stats.cancels + stats.postponed + (current.filter(s => s.status === 'pending').length);
 
                 return {
-                    ...base,
-                    saleRate: base.done > 0 ? Math.round((base.sales / base.done) * 100) : 0,
-                    avgPrime: base.done > 0 ? Math.round(base.prime / base.done) : 0,
-                    cancelRate: total > 0 ? Math.round((base.cancels / total) * 100) : 0,
-                    bakimRate: base.done > 0 ? Math.round((base.bakims / base.done) * 100) : 0,
+                    ...stats,
+                    saleRate: stats.done > 0 ? Math.round((stats.sales / stats.done) * 100) : 0,
+                    avgPrime: stats.done > 0 ? Math.round(stats.prime / stats.done) : 0,
+                    cancelRate: total > 0 ? Math.round((stats.cancels / total) * 100) : 0,
+                    bakimRate: stats.done > 0 ? Math.round((stats.bakims / stats.done) * 100) : 0,
                 };
             },
 

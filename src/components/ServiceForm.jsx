@@ -50,7 +50,25 @@ export const ServiceForm = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <InputGroup icon={<User size={18} />} type="text" name="name" placeholder="Müşteri İsmi" value={formData.name} onChange={handleChange} required />
                         <InputGroup icon={<Phone size={18} />} type="tel" name="phone" placeholder="Telefon (05xx)" value={formData.phone} onChange={handleChange} required />
-                        <InputGroup icon={<MapPin size={18} />} type="text" name="mahalle" placeholder="Mahalle" value={formData.mahalle} onChange={handleChange} required />
+                        <div className="relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors">
+                                <MapPin size={18} />
+                            </div>
+                            <select
+                                name="mahalle"
+                                value={formData.mahalle}
+                                onChange={handleChange}
+                                required
+                                className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-blue-500 appearance-none text-slate-200 font-bold text-sm"
+                            >
+                                <option value="" disabled>Mahalle Seçin</option>
+                                <option value="Gümüşpala">Gümüşpala</option>
+                                <option value="Denizköşkler">Denizköşkler</option>
+                                <option value="Ambarlı">Ambarlı</option>
+                                <option value="Merkez">Merkez</option>
+                                <option value="Cihangir">Cihangir</option>
+                            </select>
+                        </div>
                         <div className="relative group">
                             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors">
                                 <Clock size={18} />

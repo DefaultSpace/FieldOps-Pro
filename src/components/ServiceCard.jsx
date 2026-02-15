@@ -4,12 +4,20 @@ import { useServiceStore, normalizePhone } from '../store/useServiceStore'
 import { getMapsSearchUrl } from '../utils/maps'
 import { getActiveTimeSlot, calculatePriorityScore } from '../utils/sorting'
 import { MessageModal } from './MessageModal'
+import { PostponeModal } from './PostponeModal'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 export const ServiceCard = ({ service }) => {
     const { updateService, toggleStatus } = useServiceStore();
     const [msgOpen, setMsgOpen] = useState(false);
+    const [postponeOpen, setPostponeOpen] = useState(false);
+
+    const copyAddress = (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(service.address);
+        alert('Adres kopyalandı!');
+    };
 
     const {
         attributes,
@@ -40,6 +48,7 @@ export const ServiceCard = ({ service }) => {
     const getStatusColor = () => {
         if (service.status === 'done') return 'border-emerald-500/30 bg-emerald-500/5';
         if (service.status === 'cancelled') return 'border-rose-500/30 bg-rose-500/5';
+        if (service.status === 'postponed') return 'border-amber-500/40 bg-amber-500/5 shadow-amber-900/10';
         if (isDelayed) return 'border-rose-500/40 bg-rose-500/5 shadow-rose-900/20';
         if (isActive) return 'border-amber-500/40 bg-amber-500/5 shadow-amber-900/20';
         return 'border-slate-800 bg-slate-900/40';
@@ -80,9 +89,23 @@ export const ServiceCard = ({ service }) => {
                 <div className="flex gap-2">
                     {/* USER REQUEST: Kapıdayım Button */}
                     <ActionIcon icon={<DoorOpen size={18} />} onClick={sendImHere} color="bg-rose-600 shadow-rose-600/30" title="Kapıdayım" />
-                    <ActionIcon icon={<Phone size={18} />} onClick={makeCall} color="bg-amber-500 shadow-amber-600/30" />
+                    <ActionIcon icon={<Phone size={18} />} onClick={makeCall} color="bg-indigo-600 shadow-indigo-600/30" />
                     <ActionIcon icon={<MapPin size={18} />} onClick={openMaps} color="bg-blue-600 shadow-blue-600/30" />
                     <ActionIcon icon={<MessageSquare size={18} />} onClick={() => setMsgOpen(true)} color="bg-emerald-600 shadow-emerald-600/30" />
+                </div>
+            </div>
+
+            {/* Address Section */}
+            <div
+                onClick={copyAddress}
+                className="mb-4 cursor-pointer group/addr hover:bg-slate-800/30 p-2 -m-2 rounded-xl transition-all"
+                title="Tıklayınca Kopyala"
+            >
+                <div className="flex items-start gap-2">
+                    <MapPin size={12} className="text-slate-500 mt-0.5 shrink-0 group-hover/addr:text-blue-400 transition-colors" />
+                    <p className="text-[11px] font-bold text-slate-300 line-clamp-2 leading-snug group-hover/addr:text-white transition-colors">
+                        {service.address}
+                    </p>
                 </div>
             </div>
 
@@ -124,6 +147,12 @@ export const ServiceCard = ({ service }) => {
                     TAMAMLA
                 </button>
                 <button
+                    onClick={() => setPostponeOpen(true)}
+                    className={`flex-1 py-3.5 rounded-2xl font-black text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all ${service.status === 'postponed' ? 'bg-amber-500 text-slate-900 shadow-lg shadow-amber-500/20' : 'bg-slate-950 text-slate-600 border border-white/5'}`}
+                >
+                    ERTELENDİ
+                </button>
+                <button
                     onClick={() => toggleStatus(service.id, 'cancelled')}
                     className={`flex-1 py-3.5 rounded-2xl font-black text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all ${service.status === 'cancelled' ? 'bg-rose-600 text-white shadow-lg shadow-rose-600/20' : 'bg-slate-950 text-slate-600 border border-white/5'}`}
                 >
@@ -132,6 +161,13 @@ export const ServiceCard = ({ service }) => {
             </div>
 
             {msgOpen && <MessageModal service={service} onClose={() => setMsgOpen(false)} />}
+            {postponeOpen && (
+                <PostponeModal
+                    service={service}
+                    onClose={() => setPostponeOpen(false)}
+                    onSave={(updates) => updateService(service.id, updates)}
+                />
+            )}
         </div>
     );
 };

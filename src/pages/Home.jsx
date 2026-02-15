@@ -25,7 +25,8 @@ export const Home = () => {
 
     const planned = useMemo(() => filteredServices.filter(s => !s.isExtra && s.status === 'pending'), [filteredServices]);
     const extra = useMemo(() => filteredServices.filter(s => s.isExtra && s.status === 'pending'), [filteredServices]);
-    const completed = useMemo(() => filteredServices.filter(s => s.status !== 'pending'), [filteredServices]);
+    const postponed = useMemo(() => filteredServices.filter(s => s.status === 'postponed'), [filteredServices]);
+    const completed = useMemo(() => filteredServices.filter(s => s.status !== 'pending' && s.status !== 'postponed'), [filteredServices]);
 
     const bestJob = useMemo(() => {
         return sortedServices.find(s => s.status === 'pending');
@@ -122,6 +123,15 @@ export const Home = () => {
                         <SectionHeader label="Ekstra Çağrılar" count={extra.length} color="amber" />
                         <div className="space-y-4">
                             {extra.map(s => <ServiceCard key={s.id} service={s} />)}
+                        </div>
+                    </section>
+                )}
+
+                {postponed.length > 0 && (
+                    <section>
+                        <SectionHeader label="Ertelenenler" count={postponed.length} color="amber" />
+                        <div className="space-y-4">
+                            {postponed.map(s => <ServiceCard key={s.id} service={s} />)}
                         </div>
                     </section>
                 )}
