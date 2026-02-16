@@ -2,7 +2,7 @@
     "name": "RouteX",
     "short_name": "RouteX",
     "description": "Stratejik Saha Operasyon Paneli",
-    "start_url": "/RouteX/",
+    "start_url": "/FieldOps-Pro/",
     "display": "standalone",
     "background_color": "#020617",
     "theme_color": "#1e3a8a",
