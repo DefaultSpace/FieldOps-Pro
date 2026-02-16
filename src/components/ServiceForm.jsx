@@ -78,6 +78,8 @@ export const ServiceForm = () => {
                                 <option value="12/14">12:00 - 14:00</option>
                                 <option value="14/16">14:00 - 16:00</option>
                                 <option value="16/18">16:00 - 18:00</option>
+                                <option value="18/20">18:00 - 20:00</option>
+                                <option value="Saatsiz">Saatsiz</option>
                             </select>
                         </div>
                     </div>

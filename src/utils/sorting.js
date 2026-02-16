@@ -6,7 +6,7 @@ const MAHALLE_PRIORITY = [
     "CİHANGİR"
 ];
 
-const TIMESLOT_ORDER = ["10/12", "12/14", "14/16", "16/18"];
+const TIMESLOT_ORDER = ["10/12", "12/14", "14/16", "16/18", "18/20", "Saatsiz"];
 
 export const getActiveTimeSlot = () => {
     const hour = new Date().getHours();
@@ -14,7 +14,8 @@ export const getActiveTimeSlot = () => {
     if (hour < 14) return "12/14";
     if (hour < 16) return "14/16";
     if (hour < 18) return "16/18";
-    return "16/18"; // After 18:00, still match last slot
+    if (hour < 20) return "18/20";
+    return "Saatsiz";
 };
 
 export const calculatePriorityScore = (service) => {

@@ -33,8 +33,9 @@ export const ServiceCard = ({ service }) => {
     };
 
     const activeSlot = getActiveTimeSlot();
+    const timeSlots = ["10/12", "12/14", "14/16", "16/18", "18/20", "Saatsiz"];
     const isDelayed = service.status === 'pending' &&
-        ["10/12", "12/14", "14/16", "16/18"].indexOf(service.timeSlot) < ["10/12", "12/14", "14/16", "16/18"].indexOf(activeSlot);
+        timeSlots.indexOf(service.timeSlot) < timeSlots.indexOf(activeSlot);
     const isActive = service.timeSlot === activeSlot;
 
     const openMaps = () => window.open(getMapsSearchUrl(service.address), '_blank');
