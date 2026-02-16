@@ -145,7 +145,7 @@ export const useServiceStore = create(
             }
         }),
         {
-            name: 'fieldops-pro-persist-v3',
+            name: 'routex-persist-v1',
         }
     )
 )

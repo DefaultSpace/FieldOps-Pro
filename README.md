@@ -1,6 +1,6 @@
-# FieldOps Lite - Saha Operasyon Paneli
+# RouteX - Saha Operasyon Sistemi
 
-Bu proje, beyaz eşya servis teknisyenleri için günlük iş akışını hızlandırmak amacıyla geliştirilmiş hafif bir React uygulamasıdır.
+Bu proje, saha teknisyenleri için günlük iş akışını hızlandırmak amacıyla geliştirilmiş hafif bir React uygulamasıdır.
 
 ## 🚀 Başlarken
 

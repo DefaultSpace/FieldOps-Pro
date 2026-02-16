@@ -1,8 +1,8 @@
 {
-    "name": "FieldOps Pro",
-    "short_name": "FieldOps",
+    "name": "RouteX",
+    "short_name": "RouteX",
     "description": "Stratejik Saha Operasyon Paneli",
-    "start_url": "/FieldOps-Pro/",
+    "start_url": "/RouteX/",
     "display": "standalone",
     "background_color": "#020617",
     "theme_color": "#1e3a8a",

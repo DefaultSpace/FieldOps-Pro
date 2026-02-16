@@ -30,7 +30,7 @@ export const Header = () => {
                         </div>
                     </div>
                     <div>
-                        <h1 className="font-black text-lg tracking-tighter leading-none italic uppercase">FieldOps <span className="text-blue-500">Pro</span></h1>
+                        <h1 className="font-black text-lg tracking-tighter leading-none italic uppercase">Route<span className="text-blue-500">X</span></h1>
                         <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">Strategic</p>
                     </div>
                 </div>
