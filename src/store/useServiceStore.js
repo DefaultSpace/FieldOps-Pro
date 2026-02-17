@@ -91,7 +91,7 @@ export const useServiceStore = create(
                 const current = get().services;
                 const stats = current.reduce((acc, s) => {
                     if (s.status === 'cancelled') {
-                        acc.cancels++;
+                        acc.cancelled++;
                         return acc;
                     }
                     if (s.status === 'postponed') {
@@ -111,16 +111,40 @@ export const useServiceStore = create(
                         acc.pending++;
                     }
                     return acc;
-                }, { done: 0, cancels: 0, postponed: 0, prime: 0, sales: 0, bakims: 0, pending: 0 });
+                }, { done: 0, cancelled: 0, postponed: 0, prime: 0, sales: 0, bakims: 0, pending: 0 });
 
-                const total = stats.done + stats.cancels + stats.postponed + (current.filter(s => s.status === 'pending').length);
+                const total = stats.done + stats.cancelled + stats.postponed + stats.pending;
 
                 return {
                     ...stats,
                     saleRate: stats.done > 0 ? Math.round((stats.sales / stats.done) * 100) : 0,
                     avgPrime: stats.done > 0 ? Math.round(stats.prime / stats.done) : 0,
-                    cancelRate: total > 0 ? Math.round((stats.cancels / total) * 100) : 0,
+                    cancelRate: total > 0 ? Math.round((stats.cancelled / total) * 100) : 0,
                     bakimRate: stats.done > 0 ? Math.round((stats.bakims / stats.done) * 100) : 0,
+                };
+            },
+
+            calculateStats: (data) => {
+                const stats = data.reduce((acc, s) => {
+                    if (s.status === 'done') {
+                        acc.done++;
+                        let p = 25;
+                        let c = 0;
+                        if (s.plus) { p += 130; c += 1500; }
+                        if (s.aksesuar) { p += 100; c += 800; }
+                        if (s.bakim) { p += 250; c += 1200; }
+                        acc.totalPrime += p;
+                        acc.totalCiro += c;
+                        if (s.plus || s.aksesuar || s.bakim) acc.sales++;
+                    } else if (s.status === 'cancelled') {
+                        acc.cancelled++;
+                    }
+                    return acc;
+                }, { done: 0, cancelled: 0, totalPrime: 0, totalCiro: 0, sales: 0 });
+
+                return {
+                    ...stats,
+                    saleRate: stats.done > 0 ? Math.round((stats.sales / stats.done) * 100) : 0
                 };
             },
 
