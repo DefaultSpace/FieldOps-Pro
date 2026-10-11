@@ -1,4 +1,4 @@
-export const COMMISSION_RATES = { plus: 120, aksesuar: 100, bakim: 250 };
+export const COMMISSION_RATES = { plus: 130, aksesuar: 120, bakim: 260 };
 export const SALE_LABELS = { plus: 'Plus', aksesuar: 'Aksesuar', bakim: 'Bakım' };
 export function saleQuantity(service, type) {
     const value = service[`${type}Quantity`];
