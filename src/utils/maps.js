@@ -1,15 +1,19 @@
-export const getMapsSearchUrl = (address) => {
-    const fullAddress = `${address}, Avcılar, İstanbul`;
-    return `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${encodeURIComponent(fullAddress)}&travelmode=driving`;
-};
-
-export const getMapsRouteUrl = (addresses) => {
-    if (!addresses || addresses.length === 0) return '';
-
-    const lastAddress = encodeURIComponent(addresses[addresses.length - 1]);
-    const waypoints = addresses.slice(0, -1)
-        .map(addr => encodeURIComponent(addr))
-        .join('|');
-
-    return `https://www.google.com/maps/dir/?api=1&origin=My+Location&destination=${lastAddress}&waypoints=${waypoints}&travelmode=driving`;
+export function navigationAddress(address, mahalle = '') {
+    // Keep building/site names; remove phone, floor and flat fields only.
+    const street = String(address || '').replace(/(?:\+?90)?\s*\(?0?5\d{2}\)?[\s-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}/g, '')
+        .replace(/\b(?:daire|kat|d|k)\s*[:.]?\s*(?:\d+|zemin(?:\s+kat)?|z)\b/gi, '')
+        .replace(/\b(?:cad|cd)\./gi, 'Caddesi').replace(/\b(?:sok|sk)\./gi, 'Sokak').replace(/\s+/g, ' ').trim();
+    return [street, mahalle && `${mahalle} Mahallesi`, 'Avcılar', 'İstanbul', 'Türkiye'].filter(Boolean).join(', ');
+}
+export function validCoordinates(value) {
+    return !!value && Number.isFinite(value.lat) && Number.isFinite(value.lng) && Math.abs(value.lat) <= 90 && Math.abs(value.lng) <= 180;
+}
+export function getMapsSearchUrl(address, mahalle = '', coordinates = null) {
+    const destination = validCoordinates(coordinates) ? `${coordinates.lat},${coordinates.lng}` : navigationAddress(address, mahalle);
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+}
+export const getMapsRouteUrl = addresses => {
+    if (!addresses?.length) return '';
+    const formatted = addresses.map(a => typeof a === 'string' ? navigationAddress(a) : validCoordinates(a.coordinates) ? `${a.coordinates.lat},${a.coordinates.lng}` : navigationAddress(a.navigationAddress || a.address, a.mahalle));
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(formatted.at(-1))}&waypoints=${encodeURIComponent(formatted.slice(0, -1).join('|'))}&travelmode=driving`;
 };

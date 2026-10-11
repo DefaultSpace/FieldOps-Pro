@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FieldOps rota ve kontrol simgesi">
+  <rect width="512" height="512" rx="116" fill="#0c1724"/>
+  <rect x="16" y="16" width="480" height="480" rx="102" fill="none" stroke="#253a4a" stroke-width="3"/>
+  <path d="M168 336H294Q330 336 330 302V277" fill="none" stroke="#32695f" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="168" cy="336" r="19" fill="#69ddc3"/>
+  <path d="M256 112C184 112 137 160 137 223C137 295 211 347 247 377Q256 386 265 377C301 347 375 295 375 223C375 160 328 112 256 112Z" fill="#69ddc3"/>
+  <path d="M205 224L242 260L307 192" fill="none" stroke="#0c1724" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="350" cy="356" r="17" fill="#e4b575"/>
+</svg>
