@@ -8,12 +8,28 @@ export function parseEcom(text) {
         const block = lines.slice(start, starts[index + 1] ?? lines.length);
         // Browser clipboard copies may omit all HTML list markers.
         const content = block.slice(2);
-        const neighborhoodIndex = content.findIndex((line, i) => i >= 3 && /MAH(?:ALLESİ)?\s*[-–]/i.test(line));
-        const fields = neighborhoodIndex >= 3
-            ? [content[0], content[1], content.slice(2, neighborhoodIndex).join(' '), content[neighborhoodIndex], content[neighborhoodIndex + 1] || '']
-            : [];
+        const flagStart = content.findIndex((line, i) => i >= 2 && /^(Yeni|Devam|Açık|Kapalı)$/i.test(line));
+        const payload = content.slice(2, flagStart >= 0 ? flagStart : content.length);
+        const neighborhoodIndex = payload.findIndex(line => /MAH(?:ALLESİ)?\s*[-–]/i.test(line));
+        let fields = [];
+        if (neighborhoodIndex >= 0) {
+            const line = payload[neighborhoodIndex];
+            // Some mobile clipboards join street, neighborhood and phones without spaces.
+            const marker = line.match(/MAH(?:ALLESİ)?\s*[-–]\s*AVC[Iİ]LAR\s*\+?/i);
+            const prefix = marker ? line.slice(0, marker.index).trim() : '';
+            const known = prefix.match(/(?:MUSTAFA\s*KEMAL\s*PAŞA|DENİZKÖŞKLER|GÜMÜŞPALA|ÜNİVERSİTE|FİRUZKÖY|TAHTAKALE|YEŞİLKENT|CİHANGİR|AMBARLI|MERKEZ)\s*$/i);
+            if (marker && known) {
+                const streetPart = prefix.slice(0,known.index).trim();
+                const address = [...payload.slice(0,neighborhoodIndex),streetPart].filter(Boolean).join(' ');
+                const neighborhood = `${known[0].trim()} MAH-AVCILAR+`;
+                const phoneText = [line.slice(marker.index+marker[0].length),...payload.slice(neighborhoodIndex+1)].join(' ');
+                fields = [content[0],content[1],address,neighborhood,phoneText];
+            } else if (neighborhoodIndex > 0) {
+                fields = [content[0],content[1],payload.slice(0,neighborhoodIndex).join(' '),line,payload.slice(neighborhoodIndex+1).join(' ')];
+            }
+        }
         const receiptNo = block[0];
-        if (fields.length < 4 || !fields[1]?.includes('|')) { warnings.push(`${receiptNo}: Eksik kayıt; aktarılmadı.`); return; }
+        if (fields.length < 4 || !fields[1]?.includes('|') || !fields[2]) { warnings.push(`${receiptNo}: Eksik kayıt; aktarılmadı.`); return; }
         if (seen.has(receiptNo)) { warnings.push(`${receiptNo}: Tekrarlanan fiş atlandı.`); return; }
         seen.add(receiptNo);
         const phoneMatches = (fields[4] || '').match(/(?:\+?90\s*)?\(?0?\d{3}\)?[\s-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}/g) || [];
@@ -21,7 +37,6 @@ export function parseEcom(text) {
         const mahalle = fields[3].replace(/\s*MAH(?:ALLESİ)?\s*[-–].*$/i, '').trim();
         const match = block[1].match(/(\d{1,2}):\d{2}\s*[-–—]\s*(\d{1,2}):\d{2}/);
         const timeSlot = match ? `${Number(match[1])}/${Number(match[2])}` : 'Saatsiz';
-        const flagStart = content.findIndex((line, i) => i > neighborhoodIndex && /^(Yeni|Devam|Açık|Kapalı)$/i.test(line));
         const flags = flagStart >= 0 ? content.slice(flagStart) : [];
         records.push({ receiptNo, name: fields[0], device: fields[1], address: fields[2], mahalle, phone: phones[0] || '', phones, timeSlot, warranty: flags[1] || '', jobType: flags[2] || '', addressWarning: !/\bno\s*[:.]?\s*\d/i.test(fields[2]) || !mahalle });
     });
