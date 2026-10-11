@@ -40,3 +40,6 @@ Kontrol: `node --test tests/ecom.test.js` ve `npm run build`.
 Sites kök alan adı için: `SITE_DEPLOY=1 npm run build`.
 GitHub Pages için varsayılan `/FieldOps-Pro/` yolu korunur.
 `UZERINE_TIKLA_CALISTIR.html` önceki bağımsız sürümdür; yeni tasarım Vite / React kaynaklarında çalışır.
+
+## Son sadeleştirme
+Uygulama içi harita ekranı ve koordinat düzenleme formu kaldırıldı. Google Maps'e giden Haritada aç düğmesi kalır. Var olan kayıtlı koordinatlar silinmez.
