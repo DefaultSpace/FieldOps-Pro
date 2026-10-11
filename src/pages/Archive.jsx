@@ -63,9 +63,9 @@ export const Archive = () => {
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
                                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                                                <Wallet size={12} className="text-emerald-500" /> Günlük Ciro
+                                                <Wallet size={12} className="text-emerald-500" /> Satış adedi
                                             </span>
-                                            <span className="text-sm font-black text-slate-200">{stats.totalCiro} ₺</span>
+                                            <span className="text-sm font-black text-slate-200">{Object.values(stats.quantities).reduce((sum, count) => sum + count, 0)} adet</span>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">

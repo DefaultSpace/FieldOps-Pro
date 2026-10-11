@@ -1,3 +1,4 @@
+import { SalesEditor } from './SalesEditor'
 import { useState } from 'react'
 import { MapPin, MessageSquare, Phone, Clock, AlertTriangle, DoorOpen, Star } from 'lucide-react'
 import { useServiceStore, normalizePhone } from '../store/useServiceStore'
@@ -116,12 +117,7 @@ export const ServiceCard = ({ service }) => {
                 </div>
             )}
 
-            {/* Sale Toggles */}
-            <div className="flex flex-wrap gap-1.5 mb-5">
-                <SaleToggle active={service.plus} onClick={() => updateService(service.id, { plus: !service.plus })} label="+PLUS" color="blue" />
-                <SaleToggle active={service.aksesuar} onClick={() => updateService(service.id, { aksesuar: !service.aksesuar })} label="AKSESUAR" color="amber" />
-                <SaleToggle active={service.bakim} onClick={() => updateService(service.id, { bakim: !service.bakim })} label="BAKIM" color="purple" />
-            </div>
+            <SalesEditor service={service}/>
 
             {service.status === 'done' && (
                 <div className="mb-5 bg-slate-950/50 p-3 rounded-2xl border border-white/5">
@@ -183,15 +179,3 @@ const ActionIcon = ({ icon, onClick, color, title }) => (
     </button>
 );
 
-const SaleToggle = ({ active, onClick, label, color }) => {
-    const configs = {
-        blue: active ? 'bg-blue-600 text-white border-blue-500' : 'bg-slate-950 text-slate-600 border-white/5',
-        amber: active ? 'bg-amber-600 text-white border-amber-500' : 'bg-slate-950 text-slate-600 border-white/5',
-        purple: active ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-950 text-slate-600 border-white/5',
-    };
-    return (
-        <button onClick={onClick} className={`px-3 py-2 rounded-full border text-[9px] font-black transition-all outline-none ${configs[color]}`}>
-            {label}
-        </button>
-    );
-};
