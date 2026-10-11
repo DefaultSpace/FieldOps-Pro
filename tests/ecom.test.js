@@ -52,3 +52,17 @@ test('Accepts browser bullet markers and en dash time separators', () => {
  const text = block('159000001','10:00 – 12:00').replace(/^[-*] /gm,'• ');
  const r = parseEcom(text); assert.equal(r.records.length,1); assert.equal(r.records[0].timeSlot,'10/12'); assert.equal(r.records[0].warranty,'GD');
 });
+
+test('Mobile clipboard joins address, neighborhood and phone into one line', () => {
+ const text = `159000011\n16:00 - 18:00\nÖRNEK KİŞİ\nBosch | Bulaşık Makinesi\nKARADUT SK N110 D10MUSTAFAKEMALPAŞA MAH-AVCILAR+(555) 000-0000/(555) 000-0001\nYeni\nGaranti Belirsiz\nMontaj`;
+ const r = parseEcom(text);
+ assert.equal(r.records.length,1); assert.equal(r.warnings.length,0);
+ assert.equal(r.records[0].address,'KARADUT SK N110 D10');
+ assert.equal(r.records[0].mahalle,'MUSTAFAKEMALPAŞA');
+ assert.equal(r.records[0].phones.length,2); assert.equal(r.records[0].jobType,'Montaj');
+ assert.equal(r.records[0].timeSlot,'16/18');
+ const wrapped=text.replace('MUSTAFAKEMALPAŞA MAH-AVCILAR+', 'MUSTAFAKEMALPAŞA\nMAH-AVCILAR+');
+ // Visual line wrapping without actual newlines is already covered above.
+ const split=text.replace('KARADUT SK N110 D10MUSTAFAKEMALPAŞA','KARADUT SK N110 D10\nMUSTAFAKEMALPAŞA');
+ assert.deepEqual(parseEcom(split).records,r.records);
+});
