@@ -4,6 +4,7 @@ import { ServiceForm } from '../components/ServiceForm'
 import { ServiceCard } from '../components/ServiceCard'
 import { MaterialsList } from '../components/MaterialsList'
 import { VisitHistory } from '../components/VisitHistory'
+import { VisitActions } from '../components/VisitActions'
 import { VisitNote } from '../components/VisitNote'
 import { Availability } from '../components/Availability'
 import { VisitMap } from '../components/VisitMap'
@@ -71,6 +72,7 @@ export const Home = () => {
                 {!pending.length && v.items.some(s => s.status === 'done') && <button className="undo-btn" onClick={() => undoVisit(v.items.map(s => s.id))}>Tamamlamayı geri al</button>}
                 <VisitHistory visit={v}/>
                 <VisitNote visit={v}/>
+                <VisitActions visit={v}/>
                 {pending.length > 0 && <Availability visit={v}/>}
                 <details className="receipt-details"><summary>Fişler, satış ve durum <ChevronDown size={15}/></summary><div>{v.items.map(s => <div className="receipt" key={s.id}><p>Fiş {s.receiptNo || '—'} · {s.jobType || 'Servis'} · {s.timeSlot} · {s.warranty}</p><ServiceCard service={s}/></div>)}</div></details>
             </article>;

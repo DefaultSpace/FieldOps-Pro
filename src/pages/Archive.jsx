@@ -4,7 +4,7 @@ import { tr } from 'date-fns/locale'
 import { BarChart3, TrendingUp, Ban, Star, Wallet } from 'lucide-react'
 
 export const Archive = () => {
-    const { archive, calculateStats } = useServiceStore();
+    const { archive, calculateStats, restoreVisit } = useServiceStore();
 
     // Group archive by date
     const archiveByDate = archive.reduce((acc, s) => {
@@ -28,6 +28,7 @@ export const Archive = () => {
                 </div>
             </div>
 
+            {archive.some(s => s.removedFromList) && <section className="removed-records"><h3>Listeden kaldırılan kayıtlar</h3>{archive.filter(s => s.removedFromList).map(s => <div key={s.id}><p>{s.name} · {s.receiptNo || 'Fişsiz'} · {s.address}</p><button className="quiet-btn" onClick={() => restoreVisit([s.id])}>Listeye geri getir</button></div>)}</section>}
             {dates.length === 0 ? (
                 <div className="text-center py-24 opacity-30">
                     <p className="text-lg font-bold uppercase tracking-widest">Veri Bulunamadı</p>
