@@ -34,6 +34,8 @@ export const useServiceStore = create(
                 return { archive:current.archive, services:mergeImported(current.services, current.archive, restoreKnownLocations(records,[...current.services,...current.archive]), generateUUID, Date.now(), state.planLocked) };
             }),
             undoVisit: (ids) => set(state => ({ services:state.services.map(s => ids.includes(s.id) && s.status === 'done' ? {...s,status:s.statusBeforeDone || 'pending',completedAt:null} : s) })),
+            removeVisit: (ids) => set(state => ({ services:state.services.filter(s => !ids.includes(s.id)), archive:[...state.services.filter(s => ids.includes(s.id)).map(s => ({...s,removedFromList:true})),...state.archive] })),
+            restoreVisit: (ids) => set(state => ({ services:[...state.services,...state.archive.filter(s => ids.includes(s.id)).map(s => ({...s,removedFromList:false}))], archive:state.archive.filter(s => !ids.includes(s.id)) })),
             startNewDay: () => set(state => ({ services: [], archive: [...state.services, ...state.archive], planLocked: false })),
             addService: (data) => {
                 const phone = normalizePhone(data.phone);
