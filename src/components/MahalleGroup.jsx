@@ -8,7 +8,7 @@ import {
 
 export const MahalleGroup = ({ mahalleName, services }) => {
     const openRoute = () => {
-        const addresses = services.map(s => s.address);
+        const addresses = services;
         window.open(getMapsRouteUrl(addresses), '_blank');
     };
 

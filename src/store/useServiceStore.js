@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { mergeImported } from '../utils/ecom'
+import { archiveFinishedDays, restoreKnownLocations } from '../utils/fieldTools'
 
 const generateUUID = () => {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -27,6 +29,12 @@ export const useServiceStore = create(
             setPlanLocked: (locked) => set({ planLocked: locked }),
             setLastLocation: (loc) => set({ lastLocation: loc }),
 
+            importServices: (records) => set(state => {
+                const current = archiveFinishedDays(state.services, state.archive);
+                return { archive:current.archive, services:mergeImported(current.services, current.archive, restoreKnownLocations(records,[...current.services,...current.archive]), generateUUID, Date.now(), state.planLocked) };
+            }),
+            undoVisit: (ids) => set(state => ({ services:state.services.map(s => ids.includes(s.id) && s.status === 'done' ? {...s,status:s.statusBeforeDone || 'pending',completedAt:null} : s) })),
+            startNewDay: () => set(state => ({ services: [], archive: [...state.services, ...state.archive], planLocked: false })),
             addService: (data) => {
                 const phone = normalizePhone(data.phone);
 
@@ -47,7 +55,7 @@ export const useServiceStore = create(
                     nps: null,
                     cancelReason: '',
                     postponeReason: [],
-                    receiptNo: '',
+                    receiptNo: data.receiptNo || '',
                     isExtra: get().planLocked // If locked, it's an extra job
                 };
 
@@ -68,7 +76,9 @@ export const useServiceStore = create(
                 set((state) => ({
                     services: state.services.map((s) => (s.id === id ? {
                         ...s,
-                        status: s.status === status ? 'pending' : status
+                        status: s.status === status ? 'pending' : status,
+                        statusBeforeDone: status === 'done' && s.status !== 'done' ? s.status : s.statusBeforeDone,
+                        completedAt: status === 'done' && s.status !== 'done' ? Date.now() : null
                     } : s))
                 }));
             },

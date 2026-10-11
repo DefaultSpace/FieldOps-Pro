@@ -38,7 +38,7 @@ export const ServiceCard = ({ service }) => {
         timeSlots.indexOf(service.timeSlot) < timeSlots.indexOf(activeSlot);
     const isActive = service.timeSlot === activeSlot;
 
-    const openMaps = () => window.open(getMapsSearchUrl(service.address), '_blank');
+    const openMaps = () => window.open(getMapsSearchUrl(service.navigationAddress || service.address, service.mahalle, service.coordinates), '_blank');
     const makeCall = () => window.location.href = `tel:${service.phone}`;
 
     const sendImHere = () => {

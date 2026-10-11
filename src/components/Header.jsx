@@ -1,75 +1,8 @@
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Lock, Unlock, BarChart3, LayoutDashboard, Download, Navigation } from 'lucide-react'
+import { Lock, Unlock, LayoutDashboard, Archive } from 'lucide-react'
 import { useServiceStore } from '../store/useServiceStore'
-import logo from '../../logo.svg'
-
 export const Header = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { planLocked, setPlanLocked, exportData, setLastLocation } = useServiceStore();
-
-    const handleLocation = () => {
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                setLastLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-                alert("Konum güncellendi. Artık en yakın işleri önerebilirim!");
-            });
-        }
-    };
-
-    return (
-        <header className="sticky top-0 z-50 w-full glass-card px-4 h-20 flex flex-col justify-center border-b border-white/5">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-blue-600 overflow-hidden flex items-center justify-center shadow-xl shadow-blue-600/30">
-                            <img src={logo} alt="Logo" className="w-full h-full object-cover" onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.parentNode.innerHTML = '<span class="font-black text-xl italic text-white text-center">F</span>';
-                            }} />
-                        </div>
-                    </div>
-                    <div>
-                        <h1 className="font-black text-lg tracking-tighter leading-none italic uppercase">Route<span className="text-blue-500">X</span></h1>
-                        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mt-1">Strategic</p>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    {/* Location Trigger */}
-                    <button
-                        onClick={handleLocation}
-                        className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-500 hover:text-blue-400 transition-all"
-                        title="Konum Al"
-                    >
-                        <Navigation size={20} />
-                    </button>
-
-                    {/* Plan Lock Toggle */}
-                    <button
-                        onClick={() => setPlanLocked(!planLocked)}
-                        className={`p-2.5 rounded-xl transition-all border ${planLocked ? 'bg-amber-600/20 border-amber-500/30 text-amber-500' : 'bg-slate-900 border-slate-800 text-slate-500'}`}
-                        title={planLocked ? "Plan Kilitli" : "Günü Kilitle"}
-                    >
-                        {planLocked ? <Lock size={20} /> : <Unlock size={20} />}
-                    </button>
-
-                    <nav className="flex items-center gap-1 bg-slate-950 rounded-2xl p-1 border border-white/5">
-                        <button
-                            onClick={() => navigate('/')}
-                            className={`p-2 rounded-xl transition-all ${location.pathname === '/' ? 'bg-blue-600 text-white' : 'text-slate-600'}`}
-                        >
-                            <LayoutDashboard size={20} />
-                        </button>
-                        <button
-                            onClick={() => navigate('/archive')}
-                            className={`p-2 rounded-xl transition-all ${location.pathname === '/archive' ? 'bg-slate-800 text-slate-300' : 'text-slate-600'}`}
-                        >
-                            <BarChart3 size={20} />
-                        </button>
-                    </nav>
-                </div>
-            </div>
-        </header>
-    );
+    const navigate = useNavigate(), location = useLocation();
+    const { planLocked, setPlanLocked } = useServiceStore();
+    return <header className="field-header"><div className="header-inner"><button className="brand" onClick={() => navigate('/')}><span className="brand-mark"><img src={`${import.meta.env.BASE_URL}fieldops-icon.svg`} alt="FieldOps logosu" width="44" height="44" /></span><span>FieldOps<span className="brand-pro"> PRO</span><small>SAHA SENİN KONTROLÜNDE</small></span></button><nav><button className={location.pathname === '/' ? 'nav-active' : ''} onClick={() => navigate('/')}><LayoutDashboard size={17}/><span>Günlük işler</span></button><button className={location.pathname === '/archive' ? 'nav-active' : ''} onClick={() => navigate('/archive')}><Archive size={17}/><span>Arşiv</span></button><button aria-label={planLocked ? 'Plan kilidini aç' : 'Planı kilitle'} title="Kilit sonrası eklenen fişler ekstra olarak işaretlenir" onClick={() => setPlanLocked(!planLocked)}>{planLocked ? <Lock size={17}/> : <Unlock size={17}/>}</button></nav></div></header>;
 };
