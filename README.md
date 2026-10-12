@@ -43,3 +43,13 @@ GitHub Pages için varsayılan `/FieldOps-Pro/` yolu korunur.
 
 ## Son sadeleştirme
 Uygulama içi harita ekranı ve koordinat düzenleme formu kaldırıldı. Google Maps'e giden Haritada aç düğmesi kalır. Var olan kayıtlı koordinatlar silinmez.
+
+## Teknisyen profili ve tamamlanan işler
+
+İlk açılışta teknisyen adı ve servis bölgesi kaydedilir. İsim/bölge üst bölümden değiştirilebilir. Başakşehir, Parseller ve Avcılar için mahalle seçenekleri hazırdır; eCom aktarımı seçilen bölge dışındaki fişleri de korur. Profil ve müşteri kayıtları kullanıcıların kendi tarayıcısında tutulur; sunucu hesabı veya cihazlar arası eşitleme yoktur.
+
+Fiş veya ziyaret tamamlanmadan önce “Resimleri yükledin mi?” onayı sorulur. Bu bir hatırlatmadır; fotoğraf yükleme sistemi değildir. Onay sonrası Tamamlananlar sekmesi açılır. Burada güncel ve arşivlenmiş tamamlanan fişler İstanbul saatine göre tamamlanma tarihi altında, satışları ve notlarıyla görünür. Eski fişlerin tamamlanma tarihi kayıtlı değilse kayıt tarihi kullanılır ve saat bilgisinin bulunmadığı belirtilir. Arşivlenmiş bir fişin tamamlaması geri alınırsa fiş günlük listeye geri döner.
+
+Her tamamlanan fişteki Anket mesajı, müşterinin numarasına WhatsApp metni hazırlar; teknisyen adı, cihaz türü ve işlem otomatik eklenir. Mesajı kullanıcı WhatsApp içinde gönderir. Telefon numarasına veya telefon simgesine basmak numarayı kopyalar. Sil işlemi ziyaretin fişlerini kalıcı kaldırır, arşive taşımaz.
+
+Kontrol: `node --test tests/*.test.js` ve `npm run build`.

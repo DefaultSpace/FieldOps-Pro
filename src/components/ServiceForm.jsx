@@ -1,3 +1,4 @@
+import { REGIONS } from '../utils/profile'
 import { useState } from 'react'
 import { useServiceStore } from '../store/useServiceStore'
 import { User, Phone, MapPin, Clock, FileText, PlusCircle, History, Info } from 'lucide-react'
@@ -5,8 +6,8 @@ import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 
 export const ServiceForm = () => {
-    const { addService, planLocked } = useServiceStore();
-    const [formData, setFormData] = useState({ name: '', phone: '', mahalle: '', timeSlot: '10/12', address: '', notes: '' });
+    const { addService, planLocked, region } = useServiceStore();
+    const [formData, setFormData] = useState({ name: '', phone: '', mahalle: '', timeSlot: '10/12', address: '', notes: '', device: '', jobType: '' });
     const [historyNode, setHistoryNode] = useState(null);
 
     const handleSubmit = (e) => {
@@ -20,7 +21,7 @@ export const ServiceForm = () => {
             setTimeout(() => setHistoryNode(null), 8000);
         }
 
-        setFormData({ name: '', phone: '', mahalle: '', timeSlot: '10/12', address: '', notes: '' });
+        setFormData({ name: '', phone: '', mahalle: '', timeSlot: '10/12', address: '', notes: '', device: '', jobType: '' });
     };
 
     const handleChange = (e) => {
@@ -62,11 +63,7 @@ export const ServiceForm = () => {
                                 className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-blue-500 appearance-none text-slate-200 font-bold text-sm"
                             >
                                 <option value="" disabled>Mahalle Seçin</option>
-                                <option value="Gümüşpala">Gümüşpala</option>
-                                <option value="Denizköşkler">Denizköşkler</option>
-                                <option value="Ambarlı">Ambarlı</option>
-                                <option value="Merkez">Merkez</option>
-                                <option value="Cihangir">Cihangir</option>
+                                {(REGIONS[region] || []).map(mahalle => <option key={mahalle} value={mahalle}>{mahalle}</option>)}
                             </select>
                         </div>
                         <div className="relative group">
@@ -84,6 +81,8 @@ export const ServiceForm = () => {
                         </div>
                     </div>
 
+                    <InputGroup icon={<FileText size={18} />} type="text" name="device" placeholder="Cihaz (ör. Çamaşır makinesi)" value={formData.device} onChange={handleChange} />
+                    <label>Yapılacak işlem<select name="jobType" value={formData.jobType} onChange={handleChange} className="w-full bg-slate-950 rounded-2xl p-4"><option value="">İşlem seçin</option><option>Onarım</option><option>Montaj</option><option>Bakım</option><option>Kontrol</option></select></label>
                     <InputGroup icon={<FileText size={18} />} type="text" name="address" placeholder="Tam Adres Bilgisi" value={formData.address} onChange={handleChange} required />
                     <textarea name="notes" placeholder="Cihaz modeli, şikayet veya stratejik notlar..." value={formData.notes} onChange={handleChange} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 h-24 focus:outline-none focus:border-blue-500 text-slate-200 text-xs font-bold resize-none" />
 

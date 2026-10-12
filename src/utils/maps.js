@@ -3,7 +3,7 @@ export function navigationAddress(address, mahalle = '') {
     const street = String(address || '').replace(/(?:\+?90)?\s*\(?0?5\d{2}\)?[\s-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}/g, '')
         .replace(/\b(?:daire|kat|d|k)\s*[:.]?\s*(?:\d+|zemin(?:\s+kat)?|z)\b/gi, '')
         .replace(/\b(?:cad|cd)\./gi, 'Caddesi').replace(/\b(?:sok|sk)\./gi, 'Sokak').replace(/\s+/g, ' ').trim();
-    return [street, mahalle && `${mahalle} Mahallesi`, 'Avcılar', 'İstanbul', 'Türkiye'].filter(Boolean).join(', ');
+    return [street, mahalle && `${mahalle} Mahallesi`, (/altınşehir|güvercintepe|şahintepe/.test(String(mahalle).toLocaleLowerCase('tr-TR')) ? 'Başakşehir' : 'Avcılar'), 'İstanbul', 'Türkiye'].filter(Boolean).join(', ');
 }
 export function validCoordinates(value) {
     return !!value && Number.isFinite(value.lat) && Number.isFinite(value.lng) && Math.abs(value.lat) <= 90 && Math.abs(value.lng) <= 180;
