@@ -1,7 +1,8 @@
 import { X, Send, Clock, AlertTriangle, ShieldCheck, DoorOpen, CalendarDays } from 'lucide-react'
-import { normalizePhone } from '../store/useServiceStore'
+import { useServiceStore, normalizePhone } from '../store/useServiceStore'
 
 export const MessageModal = ({ service, onClose }) => {
+    const technicianName = useServiceStore(state => state.technicianName);
     const phone = normalizePhone(service.phone);
 
     const templates = [
@@ -9,25 +10,25 @@ export const MessageModal = ({ service, onClose }) => {
             id: 'door',
             name: '🚪 Kapıdayım',
             icon: <DoorOpen size={18} className="text-emerald-400" />,
-            text: `Merhaba,\nBen Bosch Siemens yetkili servisinden Emrehan. Şu an kapınızdayım.\n\nMüsaitliğiniz varsa zili çalıyorum.`
+            text: `Merhaba,\nBen Bosch Siemens yetkili servisinden ${technicianName}. Şu an kapınızdayım.\n\nMüsaitliğiniz varsa zili çalıyorum.`
         },
         {
             id: 'arrival',
             name: 'Varış / Teyit',
             icon: <Clock size={18} className="text-blue-400" />,
-            text: `Merhaba,\nBen Emrehan, Bosch Siemens Profilo yetkili servisinden ulaşıyorum.\n\nBugün ${service.timeSlot} saat aralığında ${service.mahalle} ${service.address} adresiniz için servis kaydınız bulunmaktadır.\n\nŞu an bölgenizdeyiz. Uygunsanız adresinize doğru geçmek isteriz. Müsaitliğinizi teyit edebilir misiniz?`
+            text: `Merhaba,\nBen Bosch Siemens Profilo yetkili servisinden teknisyen ${technicianName}.\n\nBugün ${service.timeSlot} saat aralığında ${service.mahalle} ${service.address} adresiniz için servis kaydınız bulunmaktadır.\n\nŞu an bölgenizdeyiz. Uygunsanız adresinize doğru geçmek isteriz. Müsaitliğinizi teyit edebilir misiniz?`
         },
         {
             id: 'delay',
             name: 'Gecikme Bilgisi',
             icon: <AlertTriangle size={18} className="text-amber-400" />,
-            text: `Merhaba,\nBosch Siemens yetkili servisinden Emrehan ben.\n\nYoğunluk nedeniyle kısa bir gecikme yaşanmaktadır. En geç 30 dakika içerisinde ${service.mahalle} adresinizde olacağız.\n\nBilginize sunar, anlayışınız için teşekkür ederim.`
+            text: `Merhaba,\nBosch Siemens yetkili servisinden ${technicianName} ben.\n\nYoğunluk nedeniyle kısa bir gecikme yaşanmaktadır. En geç 30 dakika içerisinde ${service.mahalle} adresinizde olacağız.\n\nBilginize sunar, anlayışınız için teşekkür ederim.`
         },
         {
             id: 'postpone',
             name: '📅 Yarın Erteleme',
             icon: <CalendarDays size={18} className="text-rose-400" />,
-            text: `Merhaba,\nBosch Siemens yetkili servisinden ulaşıyorum.\n\nBugün bölgedeki yoğunluk nedeniyle size geçiş yapılamayacaktır. Yarın gün içerisinde gelmeden 10-15dk öncesinde sizi arayacağız.\n\nAnlayışınız ve sabrınız için teşekkür ederiz.`
+            text: `Merhaba,\nBosch Siemens yetkili servisinden teknisyen ${technicianName}, size ulaşıyorum.\n\nBugün bölgedeki yoğunluk nedeniyle size geçiş yapılamayacaktır. Yarın gün içerisinde gelmeden 10-15dk öncesinde sizi arayacağız.\n\nAnlayışınız ve sabrınız için teşekkür ederiz.`
         }
     ];
 
@@ -72,7 +73,7 @@ export const MessageModal = ({ service, onClose }) => {
                     <div className="w-8 h-8 rounded-full bg-emerald-600/10 flex items-center justify-center text-emerald-500">
                         <Send size={14} />
                     </div>
-                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">WhatsApp üzerinden doğrudan gönderilir.</p>
+                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">WhatsApp’ta hazır açılır. Göndermek için gönder tuşuna basın.</p>
                 </div>
             </div>
         </div>

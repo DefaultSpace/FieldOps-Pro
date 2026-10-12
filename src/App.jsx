@@ -4,15 +4,20 @@ import { Home } from './pages/Home'
 import { ReminderCenter } from './components/ReminderCenter'
 import { Archive } from './pages/Archive'
 
+import { Completed } from './pages/Completed'
+import { Profile } from './components/Profile'
+
 function App() {
     return (
         <Router>
             <div className="min-h-screen text-slate-100 flex flex-col">
                 <Header />
+                <Profile />
                 <ReminderCenter />
                 <main className="flex-1">
                     <Routes>
                         <Route path="/" element={<Home />} />
+                        <Route path="/completed" element={<Completed />} />
                         <Route path="/archive" element={<Archive />} />
                     </Routes>
                 </main>

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import { COMMISSION_RATES, SALE_LABELS } from '../utils/commission'
 import { useMemo, useState, useEffect } from 'react'
 import { useServiceStore } from '../store/useServiceStore'
@@ -13,6 +14,8 @@ import { getMapsSearchUrl, validCoordinates } from '../utils/maps'
 import { ArrowUpRight, ClipboardPaste, Search, MapPin, Check, Clock, ChevronDown, X, Plus } from 'lucide-react'
 
 export const Home = () => {
+    const navigate = useNavigate();
+    const region = useServiceStore(state => state.region);
     const { services, importServices, toggleStatus, calculateStats, startNewDay, exportData, undoVisit } = useServiceStore();
     const [lastCompleted, setLastCompleted] = useState(null);
     const [largeView, setLargeView] = useState(() => localStorage.getItem('fieldops-large-view') !== 'false');
@@ -36,7 +39,7 @@ export const Home = () => {
     const late = remaining.filter(v => appointmentState(sortSlot(v), clock) === 'late').length;
     const scheduled = remaining.filter(v => sortSlot(v) !== 'Saatsiz').length;
     return <div className={`field-shell ${largeView ? 'large-field-view' : ''}`}>
-        <div className="page-intro"><div><p className="eyebrow">GÜNLÜK OPERASYON / AVCILAR</p><h1>Önce saat. Sonra yol.</h1><p>Günün bütün işleri, tek bir yerde.</p></div><button className="primary-btn" onClick={() => setImportOpen(true)}><ClipboardPaste size={18}/> eCom listesini aktar</button></div>
+        <div className="page-intro"><div><p className="eyebrow">GÜNLÜK OPERASYON / {region}</p><h1>Önce saat. Sonra yol.</h1><p>Günün bütün işleri, tek bir yerde.</p></div><button className="primary-btn" onClick={() => setImportOpen(true)}><ClipboardPaste size={18}/> eCom listesini aktar</button></div>
         <div className="metrics">{[['Kalan ziyaret', remaining.length, `${services.length} servis fişi`], ['Saatli ziyaret', scheduled, 'Randevular öncelikli'], ['Tamamlanan fiş', stats.done, `${allVisits.length - remaining.length} kapanan ziyaret`], ['Günlük prim', `${stats.totalPrime} ₺`, 'Tamamlanan işlerin satış primi']].map(([label, value, sub]) => <div className="metric" key={label}><span>{label}</span><strong>{value}</strong><small>{sub}</small></div>)}</div>
         <div className={`priority-strip ${late ? 'risk' : ''}`}><Clock size={20}/><div><strong>{late ? `${late} ziyaretin randevu aralığı geçti` : `${scheduled} saatli ziyaret sırada`}</strong><p>{late ? 'Bu kayıtları kontrol edip müşterilerle görüş.' : 'Yakındaki bir işe geçmeden önce sıradaki randevunu kontrol et.'}</p></div><span>{clock.toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' })}</span></div>
         <div className="field-options"><button className="quiet-btn" aria-pressed={largeView} onClick={() => { localStorage.setItem('fieldops-large-view',String(!largeView)); setLargeView(!largeView); }}>{largeView ? 'Normal yazı' : 'Büyük yazı'}</button>{lastCompleted && <button className="undo-btn" onClick={() => { undoVisit(lastCompleted); setLastCompleted(null); }}>Son tamamlamayı geri al</button>}</div>
@@ -56,7 +59,7 @@ export const Home = () => {
                 <p className="visit-address"><MapPin size={16}/>{v.address}</p>
                 <div className="device-tags">{[...new Set(v.items.map(s => [s.device?.split('|').slice(0,2).join(' · ').trim() || s.notes || 'Cihaz belirtilmemiş', s.jobType?.trim() || 'İş türü belirtilmemiş'].join(' — ')))].map(d => <span key={d}>{d}</span>)}</div>
                 {v.items.some(s => s.addressWarning) && <div className="location-note">Bina numarasını kontrol et</div>}
-                <div className="visit-actions"><a className="primary-btn" target="_blank" rel="noreferrer" href={getMapsSearchUrl(location.navigationAddress || v.address, v.mahalle, location.coordinates)}>Haritada aç <ArrowUpRight size={16}/></a>{pending.length > 0 && <button className="finish-btn" onClick={() => { setLastCompleted(pending.map(s => s.id)); pending.forEach(s => toggleStatus(s.id,'done')); }}><Check size={17}/>Ziyareti tamamla</button>}</div>
+                <div className="visit-actions"><a className="primary-btn" target="_blank" rel="noreferrer" href={getMapsSearchUrl(location.navigationAddress || v.address, v.mahalle, location.coordinates)}>Haritada aç <ArrowUpRight size={16}/></a>{pending.length > 0 && <button className="finish-btn" onClick={() => { if (!confirm('Resimleri yükledin mi?')) return; pending.forEach(s => toggleStatus(s.id,'done')); navigate('/completed'); }}><Check size={17}/>Ziyareti tamamla</button>}</div>
                 {!pending.length && v.items.some(s => s.status === 'done') && <button className="undo-btn" onClick={() => undoVisit(v.items.map(s => s.id))}>Tamamlamayı geri al</button>}
                 <VisitHistory visit={v}/>
                 <VisitNote visit={v}/>

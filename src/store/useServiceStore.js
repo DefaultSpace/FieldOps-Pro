@@ -12,7 +12,7 @@ const generateUUID = () => {
 };
 
 export const normalizePhone = (phone) => {
-    let clean = phone.replace(/\D/g, '');
+    let clean = String(phone || '').replace(/\D/g, '');
     if (clean.length === 10) return '90' + clean;
     if (clean.length === 11 && clean.startsWith('0')) return '9' + clean;
     if (clean.length === 12 && clean.startsWith('90')) return clean;
@@ -22,6 +22,9 @@ export const normalizePhone = (phone) => {
 export const useServiceStore = create(
     persist(
         (set, get) => ({
+            technicianName: '',
+            region: '',
+            saveProfile: (technicianName, region) => set({ technicianName, region }),
             services: [],
             archive: [],
             planLocked: false,
@@ -34,8 +37,8 @@ export const useServiceStore = create(
                 const current = archiveFinishedDays(state.services, state.archive);
                 return { archive:current.archive, services:mergeImported(current.services, current.archive, restoreKnownLocations(records,[...current.services,...current.archive]), generateUUID, Date.now(), state.planLocked) };
             }),
-            undoVisit: (ids) => set(state => ({ services:state.services.map(s => ids.includes(s.id) && s.status === 'done' ? {...s,status:s.statusBeforeDone || 'pending',completedAt:null} : s) })),
-            removeVisit: (ids) => set(state => ({ services:state.services.filter(s => !ids.includes(s.id)), archive:[...state.services.filter(s => ids.includes(s.id)).map(s => ({...s,removedFromList:true})),...state.archive] })),
+            undoVisit: (ids) => set(state => ({ services:[...state.services.map(s => ids.includes(s.id) && s.status === 'done' ? {...s,status:s.statusBeforeDone || 'pending',completedAt:null} : s), ...state.archive.filter(s => ids.includes(s.id) && s.status === 'done').map(s => ({...s,status:s.statusBeforeDone || 'pending',completedAt:null}))], archive:state.archive.filter(s => !(ids.includes(s.id) && s.status === 'done')) })),
+            removeVisit: (ids) => set(state => ({ services:state.services.filter(s => !ids.includes(s.id)), archive:state.archive.filter(s => !ids.includes(s.id)) })),
             restoreVisit: (ids) => set(state => ({ services:[...state.services,...state.archive.filter(s => ids.includes(s.id)).map(s => ({...s,removedFromList:false}))], archive:state.archive.filter(s => !ids.includes(s.id)) })),
             startNewDay: () => set(state => ({ services: [], archive: [...state.services, ...state.archive], planLocked: false })),
             addService: (data) => {
@@ -71,7 +74,8 @@ export const useServiceStore = create(
 
             updateService: (id, updates) => {
                 set((state) => ({
-                    services: state.services.map((s) => (s.id === id ? { ...s, ...updates } : s))
+                    services: state.services.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+                    archive: state.archive.map((s) => (s.id === id ? { ...s, ...updates } : s))
                 }));
             },
 

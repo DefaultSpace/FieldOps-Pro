@@ -1,3 +1,5 @@
+import { useNavigate } from 'react-router-dom'
+import { surveyMessage } from '../utils/profile'
 import { SalesEditor } from './SalesEditor'
 import { useState } from 'react'
 import { MapPin, MessageSquare, Phone, Clock, AlertTriangle, DoorOpen, Star } from 'lucide-react'
@@ -9,8 +11,9 @@ import { PostponeModal } from './PostponeModal'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-export const ServiceCard = ({ service }) => {
-    const { updateService, toggleStatus } = useServiceStore();
+export const ServiceCard = ({ service, completedView = false }) => {
+    const navigate = useNavigate();
+    const { updateService, toggleStatus, technicianName } = useServiceStore();
     const [msgOpen, setMsgOpen] = useState(false);
     const [postponeOpen, setPostponeOpen] = useState(false);
 
@@ -40,10 +43,10 @@ export const ServiceCard = ({ service }) => {
     const isActive = service.timeSlot === activeSlot;
 
     const openMaps = () => window.open(getMapsSearchUrl(service.navigationAddress || service.address, service.mahalle, service.coordinates), '_blank');
-    const makeCall = () => window.location.href = `tel:${service.phone}`;
+    const makeCall = async () => { try { await navigator.clipboard.writeText(service.phone); alert('Telefon numarası kopyalandı!'); } catch { alert('Kopyalanamadı. Telefon numarasını seçerek kopyalayabilirsiniz.'); } };
 
     const sendImHere = () => {
-        const text = `Merhaba, Ben Bosch Siemens yetkili servisinden Emrehan. Şu an kapınızdayım. Müsaitliğiniz varsa zili çalıyorum.`;
+        const text = `Merhaba, Ben Bosch Siemens yetkili servisinden ${technicianName}. Şu an kapınızdayım. Müsaitliğiniz varsa zili çalıyorum.`;
         window.open(`https://wa.me/${normalizePhone(service.phone)}?text=${encodeURIComponent(text)}`, '_blank');
     };
 
@@ -86,12 +89,12 @@ export const ServiceCard = ({ service }) => {
                             <span className="text-[8px] bg-slate-800 text-slate-500 px-2 py-0.5 rounded-full font-black">PLANLANAN</span>
                         )}
                     </div>
-                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{service.timeSlot} • {service.phone}</p>
+                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{service.timeSlot} • <button type="button" onClick={makeCall} title="Telefon numarasını kopyala">{service.phone}</button></p>
                 </div>
                 <div className="flex gap-2">
                     {/* USER REQUEST: Kapıdayım Button */}
                     <ActionIcon icon={<DoorOpen size={18} />} onClick={sendImHere} color="bg-rose-600 shadow-rose-600/30" title="Kapıdayım" />
-                    <ActionIcon icon={<Phone size={18} />} onClick={makeCall} color="bg-indigo-600 shadow-indigo-600/30" />
+                    <ActionIcon icon={<Phone size={18} />} onClick={makeCall} title="Telefon numarasını kopyala" color="bg-indigo-600 shadow-indigo-600/30" />
                     <ActionIcon icon={<MapPin size={18} />} onClick={openMaps} color="bg-blue-600 shadow-blue-600/30" />
                     <ActionIcon icon={<MessageSquare size={18} />} onClick={() => setMsgOpen(true)} color="bg-emerald-600 shadow-emerald-600/30" />
                 </div>
@@ -136,9 +139,10 @@ export const ServiceCard = ({ service }) => {
                 </div>
             )}
 
-            <div className="flex gap-2">
+            {service.status === 'done' && <a className="primary-btn" target="_blank" rel="noopener noreferrer" href={`https://wa.me/${normalizePhone(service.phone)}?text=${encodeURIComponent(surveyMessage(service, technicianName))}`}>Anket mesajı</a>}
+            {!completedView && <div className="flex gap-2">
                 <button
-                    onClick={() => toggleStatus(service.id, 'done')}
+                    onClick={() => { if (service.status === 'done') return; if (!confirm('Resimleri yükledin mi?')) return; toggleStatus(service.id, 'done'); navigate('/completed'); }}
                     className={`flex-1 py-3.5 rounded-2xl font-black text-[10px] tracking-widest flex items-center justify-center gap-2 transition-all ${service.status === 'done' ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/20' : 'bg-slate-950 text-slate-600 border border-white/5'}`}
                 >
                     TAMAMLA
@@ -157,6 +161,7 @@ export const ServiceCard = ({ service }) => {
                 </button>
             </div>
 
+            }
             {msgOpen && <MessageModal service={service} onClose={() => setMsgOpen(false)} />}
             {postponeOpen && (
                 <PostponeModal
