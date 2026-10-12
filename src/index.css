@@ -132,4 +132,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 .completed-day { margin:24px 0; }
 .completed-day > h2 { font-size:20px; font-weight:700; margin-bottom:16px; }
 .field-modal select { width:100%; padding:12px; color:#e2e8f0; background:#0f172a; border:1px solid #334155; border-radius:12px; }
-@media(max-width:640px) { .header-inner { flex-wrap:wrap; } .field-header nav { flex-wrap:wrap; gap:4px; } }
+@media(max-width:640px) {
+    .header-inner { flex-wrap:wrap; }
+    .field-header nav { width:100%; display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)) auto; gap:4px; }
+    .field-header nav button { flex-direction:column; justify-content:center; gap:4px; padding:8px 4px; font-size:11px; }
+    .field-header nav span { display:inline; }
+}
