@@ -15,9 +15,9 @@ export function parseEcom(text) {
         if (neighborhoodIndex >= 0) {
             const line = payload[neighborhoodIndex];
             // Some mobile clipboards join street, neighborhood and phones without spaces.
-            const marker = line.match(/MAH(?:ALLESİ)?\s*[-–]\s*AVC[Iİ]LAR\s*\+?/i);
+            const marker = line.match(/MAH(?:ALLESİ)?\s*[-–]\s*(?:AVC[Iİ]LAR|BAŞAKŞEH[Iİ]R|ESENYURT)\s*\+?/i);
             const prefix = marker ? line.slice(0, marker.index).trim() : '';
-            const known = prefix.match(/(?:MUSTAFA\s*KEMAL\s*PAŞA|DENİZKÖŞKLER|GÜMÜŞPALA|ÜNİVERSİTE|FİRUZKÖY|TAHTAKALE|YEŞİLKENT|CİHANGİR|AMBARLI|MERKEZ)\s*$/i);
+            const known = prefix.match(/(?:ALT[Iİ]NŞEH[Iİ]R|GÜVERC[Iİ]NTEPE|ŞAH[Iİ]NTEPE|MUSTAFA\s*KEMAL\s*PAŞA|DENİZKÖŞKLER|GÜMÜŞPALA|ÜNİVERSİTE|FİRUZKÖY|TAHTAKALE|YEŞİLKENT|CİHANGİR|AMBARLI|MERKEZ)\s*$/i);
             if (marker && known) {
                 const streetPart = prefix.slice(0,known.index).trim();
                 const address = [...payload.slice(0,neighborhoodIndex),streetPart].filter(Boolean).join(' ');
