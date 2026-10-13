@@ -9,13 +9,13 @@ test('Reads multi-ticket visits, slots, model-free devices and incomplete final 
  assert.equal(r.records[0].mahalle,'AMBARLI'); assert.equal(r.records[1].timeSlot,'10/12');
  const visits = groupVisits(r.records); assert.equal(visits.length,2); assert.equal(earliestSlot(visits[0].items),'10/12');
 });
-test('Reimport preserves status, sales, notes, saved coordinate, and old archived tickets', () => {
+test('Reimport preserves status, sales, notes, saved coordinate, and restores archived tickets', () => {
  const records = parseEcom(block('159000001')).records;
  let services = mergeImported([], [], records, () => 'uuid');
  services[0] = {...services[0], status:'done', plus:true, notes:'keep', coordinates:{lat:40.98,lng:28.72}};
  const merged = mergeImported(services, [], [...records, ...parseEcom(block('159000002')).records], () => 'uuid2');
  assert.equal(merged.length,2); assert.equal(merged[0].status,'done'); assert.equal(merged[0].plus,true); assert.equal(merged[0].notes,'keep'); assert.equal(merged[0].coordinates.lat,40.98);
- assert.equal(mergeImported([],services,records,()=> 'new').length,0);
+ const restored=mergeImported([],services,records,()=> 'new');assert.equal(restored.length,1);assert.equal(restored[0].status,'pending');assert.equal(restored[0].notes,'keep');
 });
 test('Duplicates and malformed records are reported', () => {
  const r = parseEcom(block('159000001')+'\n'+block('159000001')+'\n159000002\nSaatsiz\n- Eksik');
@@ -66,3 +66,4 @@ test('Mobile clipboard joins address, neighborhood and phone into one line', () 
  const split=text.replace('KARADUT SK N110 D10MUSTAFAKEMALPAŞA','KARADUT SK N110 D10\nMUSTAFAKEMALPAŞA');
  assert.deepEqual(parseEcom(split).records,r.records);
 });
+

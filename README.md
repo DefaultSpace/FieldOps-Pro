@@ -1,55 +1,37 @@
-# RouteX - Saha Operasyon Sistemi
+# FieldOps Pro
 
-Bu proje, saha teknisyenleri için günlük iş akışını hızlandırmak amacıyla geliştirilmiş hafif bir React uygulamasıdır.
+Saha teknisyenleri için eCom listesinden çalışan günlük iş takip yardımcısı. eCom; resmi fiş, fotoğraf, imza ve stok işlemlerinin yapıldığı sistem olmaya devam eder.
 
-## 🚀 Başlarken
+## Kullanım
 
-Proje **Vite + React** tabanlıdır ancak sisteminizde Node.js yüklü olmadığı tespit edildiği için iki farklı kullanım seçeneği sunulmuştur:
+- Teknisyen adını kaydet; bölge isteğe bağlıdır.
+- Tablette eCom listesini kopyala, FieldOps içindeki “eCom listesini aktar” alanına yapıştır.
+- Aktarım uyarılarını ve yeni/güncellenen/arşivden dönen fiş sayılarını kontrol et.
+- Saat ve mahalleye göre işleri takip et. Numara kopyalama, düzenlenebilir WhatsApp mesajları, iş/malzeme notları ve harita bağlantısı kullan.
+- Fotoğrafları eCom’a yükleyip resmi fişi orada kapat. FieldOps’ta Tamamla seçeneği yalnızca yerel kaydı tamamlar.
+- Tamamlananlar ve arşivde fişleri tarih/isim/adres/telefonla ara.
+- Gün sonunda kapanan işleri arşivle; bitmemiş işler listede kalır. Düzenli olarak JSON yedeği indir.
 
-### Seçenek 1: Hemen Kullan (Önerilen)
-Dizin içindeki `UZERINE_TIKLA_CALISTIR.html` dosyasını tarayıcınızda açarak uygulamayı **hemen kullanmaya başlayabilirsiniz**. Tüm özellikler (Zustand, Tailwind, DND) bu tek dosyada CDN üzerinden çalışacak şekilde paketlenmiştir.
+Prim birimleri: bakım 260 TL, aksesuar 120 TL, Plus 130 TL. Günlük kazanç İstanbul tarihine göre hesaplanır. Fiş başına ek ücret yoktur.
 
-### Seçenek 2: Geliştirici Modu (Node.js gerektirir)
-Eğer ileride Node.js kurarsanız şu adımları izleyebilirsiniz:
-1. Terminali proje klasöründe açın.
-2. `npm install` komutu ile bağımlılıkları yükleyin.
-3. `npm run dev` komutu ile geliştirme sunucusunu başlatın.
+## Veri davranışı
 
-## 📌 Özellikler
-- **Mahalle Bazlı Gruplama**: Servisleriniz otomatik olarak mahallelerine göre ayrılır.
-- **Akıllı Rota**: Bir mahalledeki tüm adresleri tek tıkla Google Maps üzerinden sıraya dizebilirsiniz (CarPlay uyumlu).
-- **Hızlı Giriş**: Sabah servis girişlerini saniyeler içinde yapın, mükerrer müşteri uyarılarını alın.
-- **Prim Sistemi**: Günlük kazancınızı (Plus, Aksesuar, Bakım satışları dahil) real-time takip edin.
-- **Arşiv**: Geçmiş günler otomatik olarak arşive taşınır, tarih bazlı primlerinizi görebilirsiniz.
-- **Drag & Drop**: Mahalle içindeki servis sıralamasını sürükle-bırak ile değiştirebilirsiniz.
+Kayıtlar aynı tarayıcının `routex-persist-v1` alanında tutulur. Sunucu hesabı veya otomatik cihaz eşitlemesi yoktur. Yedek geri yükleme, mevcut fişleri koruyarak yalnızca eksikleri ekler. Silinen son kayıt grubu açık oturumda geri alınabilir; silme arşive taşımaz.
 
-## 🛡️ Veri Güvenliği
-Uygulama tamamen **LocalStorage** kullanır. Verileriniz tarayıcınızda saklanır, hiçbir sunucuya gönderilmez.
+eCom aktarımı arşivde bulunan fişi bekleyen olarak geri açar; notlar ve satış adetleri korunur. Aktif fişin mevcut durumu korunur. Eski tamamlanma tarihi yeniden açılışta temizlenir; aynı fişin ayrı ziyaret sürümleri tutulmaz. Kaynak listede olmayan işler kendiliğinden silinmez.
 
-## FieldOps Pro — yeni günlük ekran
+Uygulama kapalıyken zamanında bildirim garantisi yoktur. WhatsApp mesajları kullanıcı tarafından gönderilir. Harita bağlantısı adresi Google Maps’e aktarır; rota optimizasyonu veya adres doğrulaması yapılmaz. Tam çevrimdışı açılış desteklenmez.
 
-Mevcut React, Zustand ve `routex-persist-v1` veri yapısı korunur. Günlük ekran eCom listesini tek seferde aktarır, aynı müşteri / adres / mahalledeki fişleri ziyaret olarak gruplar. Fiş bazında satış, prim, durum ve arşiv korunur. Listeyi tekrar aktarmak mevcut fişlerin durumunu veya satışlarını sıfırlamaz. Arşivde bulunan fişler yeniden açılmaz. Silinen kaynak fişleri otomatik silinmez.
+`UZERINE_TIKLA_CALISTIR.html` tarihî bağımsız sürümdür; güncel uygulama değildir. Güncel sürüm `src/` altındaki React uygulamasıdır.
 
-Saatli ziyaretler başlangıç saatine göre sıralanır; İstanbul saatinde aralığı geçenler işaretlenir. Bu ekran mesafe veya seyahat süresi hesaplamaz. Saatsiz bir işe yetişme garantisi vermez.
+## Geliştirme
 
-Harita aramasına mahalle, Avcılar, İstanbul eklenir. Daire ve kat kartta korunur, navigasyon metninden çıkarılır. Google Maps adres araması doğrulama değildir. Kullanıcı doğru noktayı bulup enlem ve boylamını kaydettiğinde navigasyon doğrudan koordinata açılır. Kalan ziyaretlerin kendi haritasında yalnızca kaydedilmiş koordinatlar gösterilir. Tamamlanan ziyaretler haritadan kalkar. Maps Favoriler listesi değiştirilmez.
+```sh
+npm ci
+npm test
+npm run dev
+```
 
-Müşteri verileri yerel tarayıcıda tutulur. Navigasyon tıklanınca hedef adres / koordinat Google Maps'e gider. Harita açılırsa OpenStreetMap zemin karoları yüklenir. Farklı alan adı veya cihaz eski localStorage verisini paylaşmaz. Önemli kayıtları eski uygulamadan yedekleyin; bu sürümde yedek geri yükleme arayüzü yoktur.
+GitHub Pages paketi: `npm run build` (`/FieldOps-Pro/`). Sites kök alan adı: `SITE_DEPLOY=1 npm run build`.
 
-Kontrol: `node --test tests/ecom.test.js` ve `npm run build`.
-Sites kök alan adı için: `SITE_DEPLOY=1 npm run build`.
-GitHub Pages için varsayılan `/FieldOps-Pro/` yolu korunur.
-`UZERINE_TIKLA_CALISTIR.html` önceki bağımsız sürümdür; yeni tasarım Vite / React kaynaklarında çalışır.
-
-## Son sadeleştirme
-Uygulama içi harita ekranı ve koordinat düzenleme formu kaldırıldı. Google Maps'e giden Haritada aç düğmesi kalır. Var olan kayıtlı koordinatlar silinmez.
-
-## Teknisyen profili ve tamamlanan işler
-
-İlk açılışta teknisyen adı ve servis bölgesi kaydedilir. İsim/bölge üst bölümden değiştirilebilir. Başakşehir, Parseller ve Avcılar için mahalle seçenekleri hazırdır; eCom aktarımı seçilen bölge dışındaki fişleri de korur. Profil ve müşteri kayıtları kullanıcıların kendi tarayıcısında tutulur; sunucu hesabı veya cihazlar arası eşitleme yoktur.
-
-Fiş veya ziyaret tamamlanmadan önce “Resimleri yükledin mi?” onayı sorulur. Bu bir hatırlatmadır; fotoğraf yükleme sistemi değildir. Onay sonrası Tamamlananlar sekmesi açılır. Burada güncel ve arşivlenmiş tamamlanan fişler İstanbul saatine göre tamamlanma tarihi altında, satışları ve notlarıyla görünür. Eski fişlerin tamamlanma tarihi kayıtlı değilse kayıt tarihi kullanılır ve saat bilgisinin bulunmadığı belirtilir. Arşivlenmiş bir fişin tamamlaması geri alınırsa fiş günlük listeye geri döner.
-
-Her tamamlanan fişteki Anket mesajı, müşterinin numarasına WhatsApp metni hazırlar; teknisyen adı, cihaz türü ve işlem otomatik eklenir. Mesajı kullanıcı WhatsApp içinde gönderir. Telefon numarasına veya telefon simgesine basmak numarayı kopyalar. Sil işlemi ziyaretin fişlerini kalıcı kaldırır, arşive taşımaz.
-
-Kontrol: `node --test tests/*.test.js` ve `npm run build`.
+[13 Ekim 2026 saha inceleme ve değişiklik raporu](docs/SAHA-INCELEME-2026-10-13.md)
