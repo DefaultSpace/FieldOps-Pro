@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseEcom, mergeImported, groupVisits, earliestSlot, appointmentState } from '../src/utils/ecom.js';
+import { parseEcom, mergeImported, importWithArchive, groupVisits, earliestSlot, appointmentState } from '../src/utils/ecom.js';
 import { navigationAddress, getMapsSearchUrl, validCoordinates } from '../src/utils/maps.js';
 const block = (id, slot = 'Saatsiz', device = 'Bosch | Bulaşık Makinesi', name = 'ÖRNEK MÜŞTERİ') => `${id}\n${slot}\n- ${name}\n- ${device}\n- Örnek sok. no:34 d:5 k:2 Site A blok\n- AMBARLI MAH-AVCILAR+\n- (555) 000-0000/(555) 000-0001\n* Yeni\n* GD\n* Onarım`;
 test('Reads multi-ticket visits, slots, model-free devices and incomplete final flags', () => {
@@ -9,13 +9,14 @@ test('Reads multi-ticket visits, slots, model-free devices and incomplete final 
  assert.equal(r.records[0].mahalle,'AMBARLI'); assert.equal(r.records[1].timeSlot,'10/12');
  const visits = groupVisits(r.records); assert.equal(visits.length,2); assert.equal(earliestSlot(visits[0].items),'10/12');
 });
-test('Reimport preserves status, sales, notes, saved coordinate, and old archived tickets', () => {
+test('Reimport preserves status, sales, notes, saved coordinate, and restores archived tickets', () => {
  const records = parseEcom(block('159000001')).records;
  let services = mergeImported([], [], records, () => 'uuid');
  services[0] = {...services[0], status:'done', plus:true, notes:'keep', coordinates:{lat:40.98,lng:28.72}};
  const merged = mergeImported(services, [], [...records, ...parseEcom(block('159000002')).records], () => 'uuid2');
  assert.equal(merged.length,2); assert.equal(merged[0].status,'done'); assert.equal(merged[0].plus,true); assert.equal(merged[0].notes,'keep'); assert.equal(merged[0].coordinates.lat,40.98);
- assert.equal(mergeImported([],services,records,()=> 'new').length,0);
+ const restored = mergeImported([],services,records,()=> 'new');
+ assert.equal(restored.length,1); assert.equal(restored[0].status,'pending'); assert.equal(restored[0].notes,'keep');
 });
 test('Duplicates and malformed records are reported', () => {
  const r = parseEcom(block('159000001')+'\n'+block('159000001')+'\n159000002\nSaatsiz\n- Eksik');
@@ -65,4 +66,18 @@ test('Mobile clipboard joins address, neighborhood and phone into one line', () 
  // Visual line wrapping without actual newlines is already covered above.
  const split=text.replace('KARADUT SK N110 D10MUSTAFAKEMALPAŞA','KARADUT SK N110 D10\nMUSTAFAKEMALPAŞA');
  assert.deepEqual(parseEcom(split).records,r.records);
+});
+
+test('Archived receipts return once to remaining jobs with notes and sale quantities', () => {
+ const archive = ['done','cancelled','postponed'].map((status,i) => ({id:`old-${i}`,receiptNo:`15900000${i+1}`,status,completedAt:123,removedFromList:true,notes:'keep',visitNote:'part note',plus:true,plusQuantity:2,aksesuarQuantity:3,reminderAt:123,availability:'later'}));
+ const untouched={id:'keep',receiptNo:'159000009',status:'done'};
+ const records=archive.map(s => ({receiptNo:s.receiptNo,name:'Updated',timeSlot:'10/12'}));
+ const result=importWithArchive([], [...archive,untouched], [...records,records[0]], ()=> 'new',456);
+ assert.equal(result.services.length,3); assert.deepEqual(result.archive,[untouched]);
+ for(const s of result.services) {
+  assert.equal(s.status,'pending'); assert.equal(s.completedAt,null); assert.equal(s.removedFromList,false);
+  assert.equal(s.notes,'keep'); assert.equal(s.visitNote,'part note'); assert.equal(s.plusQuantity,2); assert.equal(s.aksesuarQuantity,3); assert.equal(s.reminderAt,null);
+ }
+ assert.deepEqual(importWithArchive(result.services,result.archive,records,()=> 'new',789),result);
+ assert.deepEqual(importWithArchive([],archive,[],()=> 'new').archive,archive);
 });

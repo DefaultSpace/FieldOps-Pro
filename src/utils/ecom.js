@@ -15,9 +15,9 @@ export function parseEcom(text) {
         if (neighborhoodIndex >= 0) {
             const line = payload[neighborhoodIndex];
             // Some mobile clipboards join street, neighborhood and phones without spaces.
-            const marker = line.match(/MAH(?:ALLESİ)?\s*[-–]\s*(?:AVC[Iİ]LAR|BAŞAKŞEH[Iİ]R|ESENYURT)\s*\+?/i);
+            const marker = line.match(/MAH(?:ALLESİ)?\s*[-–]\s*AVC[Iİ]LAR\s*\+?/i);
             const prefix = marker ? line.slice(0, marker.index).trim() : '';
-            const known = prefix.match(/(?:ALT[Iİ]NŞEH[Iİ]R|GÜVERC[Iİ]NTEPE|ŞAH[Iİ]NTEPE|MUSTAFA\s*KEMAL\s*PAŞA|DENİZKÖŞKLER|GÜMÜŞPALA|ÜNİVERSİTE|FİRUZKÖY|TAHTAKALE|YEŞİLKENT|CİHANGİR|AMBARLI|MERKEZ)\s*$/i);
+            const known = prefix.match(/(?:MUSTAFA\s*KEMAL\s*PAŞA|DENİZKÖŞKLER|GÜMÜŞPALA|ÜNİVERSİTE|FİRUZKÖY|TAHTAKALE|YEŞİLKENT|CİHANGİR|AMBARLI|MERKEZ)\s*$/i);
             if (marker && known) {
                 const streetPart = prefix.slice(0,known.index).trim();
                 const address = [...payload.slice(0,neighborhoodIndex),streetPart].filter(Boolean).join(' ');
@@ -48,9 +48,20 @@ export function mergeImported(services, archive, records, createId, now = Date.n
     for (const record of records) {
         const index = result.findIndex(s => s.receiptNo === record.receiptNo);
         if (index >= 0) result[index] = { ...result[index], ...record };
-        else if (!archive.some(s => s.receiptNo === record.receiptNo)) result.push({ ...record, id: createId(), createdAt: now, status: 'pending', plus: false, aksesuar: false, bakim: false, nps: null, notes: '', isExtra });
+        else {
+            const previous = archive.find(s => s.receiptNo === record.receiptNo);
+            if (previous) result.push({ ...previous, ...record, status: 'pending', completedAt: null, statusBeforeDone: null, removedFromList: false, restoredAt: now, availability: '', reminderAt: null, reminderNotifiedAt: null, actionReason: '', actionReceiptNo: '', actionRecordCount: null });
+            else result.push({ ...record, id: createId(), createdAt: now, status: 'pending', plus: false, aksesuar: false, bakim: false, nps: null, notes: '', isExtra });
+        }
     }
     return result;
+}
+export function importWithArchive(services, archive, records, createId, now = Date.now(), isExtra = false) {
+    const receipts = new Set(records.map(record => record.receiptNo));
+    return {
+        services: mergeImported(services, archive, records, createId, now, isExtra),
+        archive: archive.filter(service => !receipts.has(service.receiptNo)),
+    };
 }
 export function groupVisits(services) {
     const groups = new Map();
