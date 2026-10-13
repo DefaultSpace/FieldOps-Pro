@@ -34,6 +34,7 @@ export const useServiceStore = create(persist((set,get) => ({
         return {services:uniqueRecords([...state.services,...selected]),archive:state.archive.filter(s=>!ids.includes(s.id))};
     }),
     startNewDay:()=>set(state=>closeDay(state.services,state.archive)),
+    clearDay:()=>set(state=>({lastDeleted:{services:[...state.services],archive:[]},services:[]})),
     addService:data=>{
         const state=get(), receiptNo=String(data.receiptNo||'').trim();
         if(receiptNo && [...state.services,...state.archive].some(s=>s.receiptNo===receiptNo)) return {error:'Bu fiş zaten kayıtlı. Fiş numarasıyla arayın veya eCom listesini yeniden aktarın.'};

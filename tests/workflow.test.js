@@ -5,7 +5,7 @@ import {importWithArchive,groupVisits,parseEcom,appointmentState,earliestSlot} f
 import {readBackup,mergeBackup} from '../src/utils/backup.js';
 import {localPhone,contactPhones,messageTemplates,whatsappUrl} from '../src/utils/contacts.js';
 import {materialRows} from '../src/utils/fieldTools.js';
-import {getMapsSearchUrl} from '../src/utils/maps.js';
+import {getMapsSearchUrl, cleanMapsAddress} from '../src/utils/maps.js';
 const now=Date.parse('2026-10-13T21:01:00Z');
 const row=(id,status='pending')=>({id,receiptNo:id,name:'Örnek',status,createdAt:now-86400000,notes:'koru'});
 test('day close keeps unfinished jobs; Istanbul daily completed count survives archiving',()=>{
@@ -48,8 +48,32 @@ test('parser warns but retains unknown neighborhood; preserves district and minu
  const result=parseEcom(text);assert.equal(result.records.length,1);assert.equal(result.sourceDate,'2026-10-13');assert.equal(result.records[0].district,'ESENYURT');assert.equal(groupVisits(result.records)[0].district,'ESENYURT');assert.ok(result.warnings.length);assert.equal(result.records[0].timeSlot,'10:30/12:30');
  assert.equal(earliestSlot([{timeSlot:'11/13'},{timeSlot:'10:30/12:30'}]),'10:30/12:30');
  assert.equal(appointmentState('10:30/12:30',new Date('2026-10-13T07:15:00Z')),'upcoming');
- assert.ok(decodeURIComponent(getMapsSearchUrl('Örnek sok','Yeni',null,'Esenyurt')).includes('Esenyurt'));
+ assert.ok(decodeURIComponent(getMapsSearchUrl('Örnek sok','Yeni',null,'Esenyurt')).includes('Örnek sok'));
+ assert.ok(decodeURIComponent(getMapsSearchUrl('','Yeni',null,'Esenyurt')).includes('Esenyurt'));
 });
 test('cancelled-only visits no longer inflate material list',()=>{
  assert.deepEqual(materialRows([{items:[{status:'cancelled',visitNote:'576101 pompa'}]}]),[]);
 });
+
+test('cleanMapsAddress strips apartment numbers, kat/daire, and district suffixes but preserves building number', () => {
+    assert.equal(cleanMapsAddress('Başaran sok no12 d4'), 'Başaran sok no 12');
+    assert.equal(cleanMapsAddress('Başaran sok no:12 d:4'), 'Başaran sok no 12');
+    assert.equal(cleanMapsAddress('Başaran sokak no 12 daire 4'), 'Başaran sokak no 12');
+    assert.equal(cleanMapsAddress('Başaran sok. no:12/4'), 'Başaran sok. no 12');
+    assert.equal(cleanMapsAddress('Atatürk cad. no: 20 kat 2 daire 5'), 'Atatürk cad. no 20');
+    assert.equal(cleanMapsAddress('Fevzi çakmak cd no 8 d 2'), 'Fevzi çakmak cd no 8');
+    assert.equal(cleanMapsAddress('Denizköşkler cad no 45 d6 Avcılar İstanbul'), 'Denizköşkler cad no 45');
+});
+
+test('groupVisits and formatMahalle prevent duplicate uppercase neighborhoods', () => {
+    const records = [
+        { name: 'A', address: 'Sok 1', mahalle: 'CİHANGİR', receiptNo: '1' },
+        { name: 'B', address: 'Sok 2', mahalle: 'Cihangir', receiptNo: '2' },
+        { name: 'C', address: 'Sok 3', mahalle: 'GÜMÜŞPALA', receiptNo: '3' },
+        { name: 'D', address: 'Sok 4', mahalle: 'Gümüşpala', receiptNo: '4' },
+    ];
+    const grouped = groupVisits(records);
+    const mahalles = [...new Set(grouped.map(g => g.mahalle))];
+    assert.deepEqual(mahalles, ['Cihangir', 'Gümüşpala']);
+});
+

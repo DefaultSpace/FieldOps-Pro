@@ -22,12 +22,18 @@ test('Duplicates and malformed records are reported', () => {
  assert.equal(r.records.length,1); assert.equal(r.warnings.length,2);
  assert.equal(parseEcom('not a list').records.length,0);
 });
-test('Map searches the full address and ignores saved coordinates', () => {
+test('Map searches the clean address without apartment number or district suffix and ignores saved coordinates', () => {
  const a = navigationAddress('Örnek sok. no:34 d:5 k:2 Site A blok','AMBARLI');
- assert.ok(a.includes('no:34')); assert.ok(a.includes('AMBARLI Mahallesi')); assert.ok(a.includes('Site A blok')); assert.ok(a.includes('d:5'));
- assert.ok(a.includes('k:2'));
- const url = new URL(getMapsSearchUrl('Örnek sok no:34 d:5','AMBARLI',{lat:40.98,lng:28.72}));
- assert.equal(url.pathname,'/maps/search/');assert.equal(url.searchParams.get('api'),'1');assert.ok(url.searchParams.get('query').includes('Örnek sok no:34 d:5'));assert.equal(url.searchParams.has('destination'),false);assert.ok(!url.href.includes('40.98'));
+ assert.ok(a.includes('no 34'));
+ assert.ok(!a.includes('d:5'));
+ assert.ok(!a.includes('k:2'));
+ assert.ok(!a.includes('Avcılar'));
+ const url = new URL(getMapsSearchUrl('Başaran sok no12 d4','Gümüşpala',{lat:40.98,lng:28.72}));
+ assert.equal(url.pathname,'/maps/search/');
+ assert.equal(url.searchParams.get('api'),'1');
+ assert.equal(url.searchParams.get('query'),'Başaran sok no 12');
+ assert.equal(url.searchParams.has('destination'),false);
+ assert.ok(!url.href.includes('40.98'));
  assert.equal(validCoordinates({lat:91,lng:20}),false);
 });
 test('Appointment state uses Istanbul time and exact end boundary', () => {

@@ -17,6 +17,12 @@ test('actual store: archive import, complete, archive, restore, delete undo, and
  assert.ok(store.getState().addService({receiptNo:'123456789',name:'tekrar'}).error);
  const saved=JSON.parse(storage.get('routex-persist-v1'));assert.equal(saved.state.services.length,1);assert.equal(saved.state.lastDeleted,undefined);
  store.getState().updateService('archived',{notes:'düzenlendi'});assert.equal(JSON.parse(storage.get('routex-persist-v1')).state.services[0].notes,'düzenlendi');
+ store.setState({services:[{id:'to-clear',status:'pending'}],archive:[{id:'keep-arch',status:'done'}]});
+ store.getState().clearDay();
+ assert.equal(store.getState().services.length,0);
+ assert.equal(store.getState().archive.length,1);
+ store.getState().undoDelete();
+ assert.equal(store.getState().services.length,1);
 });
 
 test('legacy storage migration removes commercial fields while retaining jobs, notes and profile',async()=>{

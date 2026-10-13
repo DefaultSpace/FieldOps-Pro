@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { completionDay, surveyMessage, REGIONS } from '../src/utils/profile.js';
-import { navigationAddress } from '../src/utils/maps.js';
+import { completionDay, surveyMessage, REGIONS, formatMahalle } from '../src/utils/profile.js';
+import { navigationAddress, districtFor } from '../src/utils/maps.js';
 import { parseEcom } from '../src/utils/ecom.js';
 
 test('Survey uses technician, appliance and operation rather than brand or model', () => {
@@ -20,8 +20,13 @@ test('Region neighborhoods use correct navigation district with uppercase import
     assert.equal(REGIONS['Başakşehir'].length,3);
     assert.equal(REGIONS['Parseller'].length,3);
     assert.equal(REGIONS['Avcılar'].length,5);
-    assert.ok(navigationAddress('Örnek sokak no:1', 'ALTINŞEHİR').includes('Başakşehir'));
-    assert.ok(navigationAddress('Örnek sokak no:1', 'AMBARLI').includes('Avcılar'));
+    assert.equal(districtFor('ALTINŞEHİR'), 'Başakşehir');
+    assert.equal(districtFor('AMBARLI'), 'Avcılar');
+    assert.equal(formatMahalle('ALTINŞEHİR'), 'Altınşehir');
+    assert.equal(formatMahalle('CİHANGİR'), 'Cihangir');
+    assert.equal(formatMahalle('GÜMÜŞPALA'), 'Gümüşpala');
+    assert.equal(formatMahalle('DENİZKÖŞKLER'), 'Denizköşkler');
+    assert.equal(formatMahalle('MERKEZ'), 'Merkez');
 });
 test('Joined Başakşehir clipboard addresses are parsed without losing neighborhood or phone', () => {
     const text = '159000001\nSaatsiz\nMüşteri\nBosch | Buzdolabı\nÖrnek sokak no:1 ALTINŞEHİR MAH-BAŞAKŞEHİR+(555) 000-0000\nYeni\nGD\nMontaj';

@@ -4,6 +4,42 @@ export const REGIONS = {
     'Parseller': ['Mustafa Kemal Paşa', 'Yeşilkent', 'Üniversite'],
     'Avcılar': ['Merkez', 'Denizköşkler', 'Gümüşpala', 'Ambarlı', 'Cihangir']
 };
+export const KNOWN_MAHALLE = {
+    'altınşehir': 'Altınşehir',
+    'altinsehir': 'Altınşehir',
+    'güvercintepe': 'Güvercintepe',
+    'guvercintepe': 'Güvercintepe',
+    'şahintepe': 'Şahintepe',
+    'sahintepe': 'Şahintepe',
+    'mustafa kemal paşa': 'Mustafa Kemal Paşa',
+    'mustafa kemal pasa': 'Mustafa Kemal Paşa',
+    'yeşilkent': 'Yeşilkent',
+    'yesilkent': 'Yeşilkent',
+    'üniversite': 'Üniversite',
+    'universite': 'Üniversite',
+    'merkez': 'Merkez',
+    'denizköşkler': 'Denizköşkler',
+    'denizkoskler': 'Denizköşkler',
+    'gümüşpala': 'Gümüşpala',
+    'gumuspala': 'Gümüşpala',
+    'ambarlı': 'Ambarlı',
+    'ambarli': 'Ambarlı',
+    'cihangir': 'Cihangir',
+    'firuzköy': 'Firuzköy',
+    'firuzkoy': 'Firuzköy',
+    'tahtakale': 'Tahtakale',
+};
+export function formatMahalle(value) {
+    if (!value) return '';
+    const trimmed = String(value).trim();
+    if (!trimmed) return '';
+    const key = trimmed.toLocaleLowerCase('tr-TR');
+    if (KNOWN_MAHALLE[key]) return KNOWN_MAHALLE[key];
+    return trimmed
+        .split(/\s+/)
+        .map(word => word ? word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1).toLocaleLowerCase('tr-TR') : '')
+        .join(' ');
+}
 export const completionDay = service => dayKey(service.completedAt || service.createdAt);
 export function surveyMessage(service, name) {
     const device = String(service.device || '').split('|').map(part => part.trim()).filter(Boolean).find(part => !/^(bosch|siemens|profilo)$/i.test(part)) || '';

@@ -1,6 +1,7 @@
 import { fieldRecord } from './fieldRecords.js'
 import { districtFor } from './maps.js'
 import { normalizePhone } from './contacts.js'
+import { formatMahalle } from './profile.js'
 export const normalizeKey = value => String(value || '').normalize('NFKC').toLocaleLowerCase('tr-TR').replace(/\s+/g, ' ').trim();
 export function parseEcom(text) {
     const lines = text.replace(/\r/g, '').split('\n').map(l => l.replace(/^[\s\u200B\uFEFF]+|[\s\u200B\uFEFF]+$/g, '').replace(/^[-•*▪●]\s*/, '')).filter(Boolean);
@@ -83,7 +84,7 @@ export function groupVisits(services) {
     const groups = new Map();
     services.forEach(s => {
         const key = [normalizeKey(s.name), normalizeKey(s.address), normalizeKey(s.mahalle),normalizeKey(districtFor(s.mahalle,s.district))].join('|');
-        if (!groups.has(key)) groups.set(key, { key, name: s.name, address: s.address, mahalle: s.mahalle, district: s.district, items: [] });
+        if (!groups.has(key)) groups.set(key, { key, name: s.name, address: s.address, mahalle: formatMahalle(s.mahalle), district: s.district, items: [] });
         groups.get(key).items.push(s);
     });
     return [...groups.values()];
