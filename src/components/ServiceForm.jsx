@@ -10,7 +10,7 @@ export function ServiceForm({onClose}) {
  <h2>Tek fiş ekle</h2><p>eCom listesinden eksik kalan veya sonradan gelen iş için.</p>
  {[['receiptNo','Fiş numarası (varsa)'],['name','Müşteri adı'],['phone','Telefon (varsa)'],['device','Cihaz'],['address','Sokak, bina, kat ve daire']].map(([key,label])=><label key={key}>{label}<input name={key} value={data[key]} onChange={change} required={['name','address'].includes(key)} inputMode={['receiptNo','phone'].includes(key)?'numeric':undefined}/></label>)}
  <label>İlçe<select name="district" value={data.district} onChange={change}>{['Avcılar','Başakşehir','Esenyurt'].map(d=><option key={d}>{d}</option>)}</select></label>
- <label>Mahalle<input list="neighborhoods" name="mahalle" required value={data.mahalle} onChange={change}/><datalist id="neighborhoods">{[...new Set(Object.values(REGIONS).flat())].map(m=><option key={m} value={m}/>)}</datalist></label>
+ <label>Mahalle<input list="neighborhoods" name="mahalle" required value={data.mahalle} onChange={change}/><datalist id="neighborhoods">{(REGIONS[region] || []).map(m=><option key={m} value={m}/>)}</datalist></label>
  <label>Saat<select name="timeSlot" value={data.timeSlot} onChange={change}>{['Saatsiz','10/12','12/14','14/16','16/18','18/20'].map(t=><option key={t}>{t}</option>)}</select></label>
  <label>İşlem<select name="jobType" value={data.jobType} onChange={change}>{['Onarım','Montaj','Bakım','Kontrol','Aksesuar Teslimi'].map(t=><option key={t}>{t}</option>)}</select></label>
  <label>İş notu<textarea name="notes" value={data.notes} onChange={change}/></label>{error&&<p role="alert">{error}</p>}<button className="primary-btn">Kaydet</button><button className="quiet-btn" type="button" onClick={onClose}>Vazgeç</button></form></div>;

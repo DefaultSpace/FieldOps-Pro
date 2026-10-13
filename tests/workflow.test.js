@@ -4,18 +4,17 @@ import {closeDay,completeRecords,todaysCompleted,dayKey} from '../src/utils/work
 import {importWithArchive,groupVisits,parseEcom,appointmentState,earliestSlot} from '../src/utils/ecom.js';
 import {readBackup,mergeBackup} from '../src/utils/backup.js';
 import {localPhone,contactPhones,messageTemplates,whatsappUrl} from '../src/utils/contacts.js';
-import {commissionStats} from '../src/utils/commission.js';
 import {materialRows} from '../src/utils/fieldTools.js';
 import {getMapsSearchUrl} from '../src/utils/maps.js';
 const now=Date.parse('2026-10-13T21:01:00Z');
-const row=(id,status='pending')=>({id,receiptNo:id,name:'Örnek',status,createdAt:now-86400000,plusQuantity:2,notes:'koru'});
-test('day close keeps unfinished jobs; Istanbul daily commission survives archiving',()=>{
+const row=(id,status='pending')=>({id,receiptNo:id,name:'Örnek',status,createdAt:now-86400000,notes:'koru'});
+test('day close keeps unfinished jobs; Istanbul daily completed count survives archiving',()=>{
  const done={...row('done','done'),completedAt:now};const yesterday={...row('yesterday','done'),completedAt:now-120000};
  const active=[row('pending'),row('later','postponed'),done,row('cancelled','cancelled'),yesterday];
  const result=closeDay(active,[],now);
  assert.deepEqual(result.services.map(s=>s.id),['pending','later']);
- assert.equal(commissionStats(todaysCompleted(active,[],now)).totalPrime,260);
- assert.equal(commissionStats(todaysCompleted(result.services,result.archive,now)).totalPrime,260);
+ assert.equal(todaysCompleted(active,[],now).length,1);
+ assert.equal(todaysCompleted(result.services,result.archive,now).length,1);
  assert.equal(dayKey(now),'2026-10-14');
 });
 test('completion is idempotent, excludes cancelled, clears reminders',()=>{
@@ -24,10 +23,10 @@ test('completion is idempotent, excludes cancelled, clears reminders',()=>{
  assert.deepEqual(completeRecords(done,['a'],now+1000),done);
 });
 test('reimport reopens archived receipts once and preserves data without duplicate archive',()=>{
- const old={...row('123456789','done'),completedAt:now,aksesuarQuantity:3,removedFromList:true};
+ const old={...row('123456789','done'),completedAt:now,removedFromList:true};
  const records=[{receiptNo:old.receiptNo,name:'Güncel'},{receiptNo:old.receiptNo,name:'Güncel'}];
  const result=importWithArchive([], [old,row('other','done')],records,()=> 'new',now);
- assert.equal(result.services.length,1);assert.equal(result.archive.length,1);assert.equal(result.services[0].status,'pending');assert.equal(result.services[0].notes,'koru');assert.equal(result.services[0].aksesuarQuantity,3);
+ assert.equal(result.services.length,1);assert.equal(result.archive.length,1);assert.equal(result.services[0].status,'pending');assert.equal(result.services[0].notes,'koru');
  assert.deepEqual(importWithArchive(result.services,result.archive,records,()=> 'new',now),result);
 });
 test('backup rejects malformed data and merging never replaces current work',()=>{

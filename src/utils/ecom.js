@@ -1,3 +1,4 @@
+import { fieldRecord } from './fieldRecords.js'
 import { districtFor } from './maps.js'
 import { normalizePhone } from './contacts.js'
 export const normalizeKey = value => String(value || '').normalize('NFKC').toLocaleLowerCase('tr-TR').replace(/\s+/g, ' ').trim();
@@ -60,10 +61,10 @@ export function mergeImported(services, archive, records, createId, now = Date.n
         else {
             const previous = archive.find(s => s.receiptNo === record.receiptNo);
             if (previous) result.push({ ...previous, ...record, status: 'pending', completedAt: null, statusBeforeDone: null, removedFromList: false, restoredAt: now, availability: '', reminderAt: null, reminderNotifiedAt: null, actionReason: '', actionReceiptNo: '', actionRecordCount: null });
-            else result.push({ ...record, id: createId(), createdAt: now, status: 'pending', plus: false, aksesuar: false, bakim: false, notes: '', isExtra });
+            else result.push({ ...record, id: createId(), createdAt: now, status: 'pending', notes: '', isExtra });
         }
     }
-    return result;
+    return result.map(fieldRecord);
 }
 export function importWithArchive(services, archive, records, createId, now = Date.now(), isExtra = false) {
     const receipts = new Set(records.map(record => record.receiptNo));

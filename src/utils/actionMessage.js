@@ -2,3 +2,5 @@ export const firstReceipt = value => String(value || '').trim().split(/[\s,;]+/)
 export function actionMessage(receipt, count, reason) {
     return [firstReceipt(receipt) || '—', count > 1 ? `${count} kaydı var` : '', String(reason || '').trim()].filter(Boolean).join(' ');
 }
+
+export const receiptForAction = items => firstReceipt(items.find(s=>s.receiptNo)?.receiptNo || '');
