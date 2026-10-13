@@ -1,3 +1,5 @@
+import { districtFor } from './maps.js'
+import { dayKey } from './workflow.js'
 import { normalizeKey } from './ecom.js'
 export function materialsFromNote(note) {
     const parts = new Map();
@@ -13,6 +15,7 @@ export function materialsFromNote(note) {
 }
 export function materialRows(visits) {
     return visits.flatMap(visit => {
+        if (visit.items.every(s => s.status === 'cancelled')) return [];
         const source = visit.items.find(s => s.visitNote)?.visitNote || '';
         const usage = visit.items.find(s => s.materialUsage)?.materialUsage || {};
         return materialsFromNote(source).map(part => ({ ...part, visit, used:Math.min(part.quantity, Math.max(0, Number(usage[part.code]) || 0)) }));
@@ -20,7 +23,7 @@ export function materialRows(visits) {
 }
 export function addressKey(service) {
     const normalize = text => normalizeKey(text).replace(/\b(?:cad|cd)\.?\s/gi,'caddesi ').replace(/\b(?:sok|sk)\.?\s/gi,'sokak ').replace(/[.,:]/g,' ').replace(/\s+/g,' ').trim();
-    return `${normalize(service.address)}|${normalize(service.mahalle)}`;
+    return `${normalize(service.address)}|${normalize(service.mahalle)}|${normalize(districtFor(service.mahalle,service.district))}`;
 }
 export function visitHistory(visit, services, archive) {
     const ids = new Set(visit.items.map(s => s.id));
@@ -29,8 +32,8 @@ export function visitHistory(visit, services, archive) {
     return [...services, ...archive].filter(s => !ids.has(s.id) && s.status === 'done' && addressKey(s) === key).sort((a,b) => (b.completedAt || b.createdAt) - (a.completedAt || a.createdAt));
 }
 export function archiveFinishedDays(services, archive, now = Date.now()) {
-    const day = value => new Intl.DateTimeFormat('en-CA', { timeZone:'Europe/Istanbul', year:'numeric',month:'2-digit',day:'2-digit' }).format(new Date(value));
-    const old = services.filter(s => ['done','cancelled'].includes(s.status) && day(s.completedAt || s.createdAt) !== day(now));
+    const day = dayKey;
+    const old = services.filter(s => ['done','cancelled'].includes(s.status) && day(s.completedAt || s.statusChangedAt || s.createdAt) !== day(now));
     const ids = new Set(old.map(s => s.id));
     return { services:services.filter(s => !ids.has(s.id)), archive:[...old,...archive] };
 }

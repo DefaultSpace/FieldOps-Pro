@@ -30,3 +30,4 @@ test('Joined Başakşehir clipboard addresses are parsed without losing neighbor
     assert.equal(result.records[0].mahalle,'ALTINŞEHİR');
     assert.equal(result.records[0].phone,'905550000000');
 });
+
