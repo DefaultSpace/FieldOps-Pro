@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {closeDay,completeRecords,todaysCompleted,dayKey} from '../src/utils/workflow.js';
-import {importWithArchive,parseEcom,appointmentState,earliestSlot} from '../src/utils/ecom.js';
+import {importWithArchive,groupVisits,parseEcom,appointmentState,earliestSlot} from '../src/utils/ecom.js';
 import {readBackup,mergeBackup} from '../src/utils/backup.js';
 import {localPhone,contactPhones,messageTemplates,whatsappUrl} from '../src/utils/contacts.js';
 import {commissionStats} from '../src/utils/commission.js';
@@ -46,7 +46,7 @@ test('two phone numbers, local copy format, safe message links and no invented E
 });
 test('parser warns but retains unknown neighborhood; preserves district and minute slots',()=>{
  const text='Tarih\n13.10.2026\n123456789\n10:30 - 12:30\nÖrnek\nBosch | Buzdolabı\nÖrnek sok no 2 YENİ MAH-ESENYURT+(555) 000-0000\nYeni\nGH\nOnarım';
- const result=parseEcom(text);assert.equal(result.records.length,1);assert.equal(result.sourceDate,'2026-10-13');assert.equal(result.records[0].district,'ESENYURT');assert.ok(result.warnings.length);assert.equal(result.records[0].timeSlot,'10:30/12:30');
+ const result=parseEcom(text);assert.equal(result.records.length,1);assert.equal(result.sourceDate,'2026-10-13');assert.equal(result.records[0].district,'ESENYURT');assert.equal(groupVisits(result.records)[0].district,'ESENYURT');assert.ok(result.warnings.length);assert.equal(result.records[0].timeSlot,'10:30/12:30');
  assert.equal(earliestSlot([{timeSlot:'11/13'},{timeSlot:'10:30/12:30'}]),'10:30/12:30');
  assert.equal(appointmentState('10:30/12:30',new Date('2026-10-13T07:15:00Z')),'upcoming');
  assert.ok(decodeURIComponent(getMapsSearchUrl('Örnek sok','Yeni',null,'Esenyurt')).includes('Esenyurt'));

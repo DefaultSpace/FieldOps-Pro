@@ -82,7 +82,7 @@ export function groupVisits(services) {
     const groups = new Map();
     services.forEach(s => {
         const key = [normalizeKey(s.name), normalizeKey(s.address), normalizeKey(s.mahalle),normalizeKey(districtFor(s.mahalle,s.district))].join('|');
-        if (!groups.has(key)) groups.set(key, { key, name: s.name, address: s.address, mahalle: s.mahalle, items: [] });
+        if (!groups.has(key)) groups.set(key, { key, name: s.name, address: s.address, mahalle: s.mahalle, district: s.district, items: [] });
         groups.get(key).items.push(s);
     });
     return [...groups.values()];
