@@ -1,7 +1,7 @@
+import { fieldRecord, fieldState } from '../utils/fieldRecords'
 import { safeStorage } from '../utils/storage'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { commissionStats } from '../utils/commission'
 import { importWithArchive, importSummary } from '../utils/ecom'
 import { archiveFinishedDays, restoreKnownLocations } from '../utils/fieldTools'
 import { normalizePhone } from '../utils/contacts'
@@ -37,11 +37,10 @@ export const useServiceStore = create(persist((set,get) => ({
     addService:data=>{
         const state=get(), receiptNo=String(data.receiptNo||'').trim();
         if(receiptNo && [...state.services,...state.archive].some(s=>s.receiptNo===receiptNo)) return {error:'Bu fiş zaten kayıtlı. Fiş numarasıyla arayın veya eCom listesini yeniden aktarın.'};
-        const record={...data,receiptNo,id:generateUUID(),phone:normalizePhone(data.phone),createdAt:Date.now(),status:'pending',plus:false,aksesuar:false,bakim:false};
+        const record={...data,receiptNo,id:generateUUID(),phone:normalizePhone(data.phone),createdAt:Date.now(),status:'pending'};
         set({services:[record,...state.services]});return {id:record.id};
     },
     updateService:(id,updates)=>set(state=>({services:state.services.map(s=>s.id===id?{...s,...updates}:s),archive:state.archive.map(s=>s.id===id?{...s,...updates}:s)})),
-    calculateStats:commissionStats,
     restoreBackup:backup=>{
         const result=mergeBackup(get(),backup);set({services:result.services,archive:result.archive});return result;
     },
@@ -51,4 +50,4 @@ export const useServiceStore = create(persist((set,get) => ({
         const url=URL.createObjectURL(blob),link=document.createElement('a');
         link.href=url;link.download=`fieldops-${dayKey(now)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);set({lastBackupAt:now});
     },
-}),{name:'routex-persist-v1',storage:createJSONStorage(()=>safeStorage),partialize:state=>({technicianName:state.technicianName,region:state.region,services:state.services,archive:state.archive,lastBackupAt:state.lastBackupAt})}));
+}),{name:'routex-persist-v1',version:1,migrate:state=>fieldState(state),merge:(saved,current)=>({...current,...fieldState(saved||{})}),storage:createJSONStorage(()=>safeStorage),partialize:state=>({technicianName:state.technicianName,region:state.region,services:state.services.map(fieldRecord),archive:state.archive.map(fieldRecord),lastBackupAt:state.lastBackupAt})}));

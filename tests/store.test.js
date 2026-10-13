@@ -13,8 +13,18 @@ test('actual store: archive import, complete, archive, restore, delete undo, and
  store.getState().startNewDay();assert.equal(store.getState().archive[0].status,'done');
  store.getState().undoVisit(['archived']);assert.equal(store.getState().services[0].status,'pending');
  store.getState().removeVisit(['archived']);assert.equal(store.getState().services.length,0);assert.equal(store.getState().archive.length,0);
- store.getState().undoDelete();assert.equal(store.getState().services[0].notes,'sakla');assert.equal(store.getState().services[0].plusQuantity,2);
+ store.getState().undoDelete();assert.equal(store.getState().services[0].notes,'sakla');assert.equal(store.getState().services[0].plusQuantity,undefined);
  assert.ok(store.getState().addService({receiptNo:'123456789',name:'tekrar'}).error);
  const saved=JSON.parse(storage.get('routex-persist-v1'));assert.equal(saved.state.services.length,1);assert.equal(saved.state.lastDeleted,undefined);
  store.getState().updateService('archived',{notes:'düzenlendi'});assert.equal(JSON.parse(storage.get('routex-persist-v1')).state.services[0].notes,'düzenlendi');
+});
+
+test('legacy storage migration removes commercial fields while retaining jobs, notes and profile',async()=>{
+ const legacy={technicianName:'Teknisyen',region:'Avcılar',services:[{id:'old',name:'Örnek',status:'pending',jobType:'Bakım',notes:'pompa takılacak',plus:true,plusQuantity:3,bakim:true}],archive:[{id:'past',status:'done',aksesuarQuantity:2}]};
+ storage.set('routex-persist-v1',JSON.stringify({state:legacy,version:0}));
+ await store.persist.rehydrate();
+ assert.equal(store.getState().technicianName,'Teknisyen');assert.equal(store.getState().region,'Avcılar');
+ assert.equal(store.getState().services[0].jobType,'Bakım');assert.equal(store.getState().services[0].notes,'pompa takılacak');
+ assert.equal(store.getState().services[0].plus,undefined);assert.equal(store.getState().archive[0].aksesuarQuantity,undefined);
+ assert.equal(JSON.parse(storage.get('routex-persist-v1')).version,1);
 });

@@ -1,3 +1,4 @@
+import { fieldRecord } from './fieldRecords.js'
 import { uniqueRecords } from './workflow.js'
 const statuses=['pending','postponed','done','cancelled'];
 export function readBackup(text) {
@@ -9,9 +10,8 @@ export function readBackup(text) {
         for(const key of ['phone','receiptNo','address','mahalle','device','notes','visitNote','timeSlot','jobType']) if(s[key]!=null && typeof s[key]!=='string') throw new Error('Yedekte geçersiz alan var: '+key);
         if(s.phones!=null && (!Array.isArray(s.phones)||s.phones.some(p=>typeof p!=='string'))) throw new Error('Yedekte geçersiz telefon listesi var.');
         if(s.completedAt!=null && !Number.isFinite(s.completedAt)) throw new Error('Yedekte geçersiz tarih var.');
-        for(const key of ['plusQuantity','aksesuarQuantity','bakimQuantity']) if(s[key]!=null && (!Number.isSafeInteger(s[key]) || s[key]<0 || s[key]>9999)) throw new Error('Yedekte geçersiz satış adedi var.');
         const result={}; for(const [key,value] of Object.entries(s)) if(!['__proto__','constructor','prototype'].includes(key)) result[key]=value;
-        return result;
+        return fieldRecord(result);
     });
     return {s:clean(data.s),a:clean(data.a)};
 }
@@ -19,6 +19,6 @@ export function mergeBackup(state, backup) {
     const current=uniqueRecords([...state.services,...state.archive]);
     const ids=new Set(current.map(s=>s.id)), receipts=new Set(current.map(s=>s.receiptNo).filter(Boolean));
     const take = list => list.filter(s=>{if(ids.has(s.id)||(s.receiptNo&&receipts.has(s.receiptNo)))return false;ids.add(s.id);if(s.receiptNo)receipts.add(s.receiptNo);return true;});
-    const active=take(backup.s), archived=take(backup.a);
+    const active=take(backup.s.map(fieldRecord)), archived=take(backup.a.map(fieldRecord));
     return {services:[...state.services,...active],archive:[...state.archive,...archived],added:active.length+archived.length,skipped:backup.s.length+backup.a.length-active.length-archived.length};
 }

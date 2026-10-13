@@ -9,12 +9,12 @@ test('Reads multi-ticket visits, slots, model-free devices and incomplete final 
  assert.equal(r.records[0].mahalle,'AMBARLI'); assert.equal(r.records[1].timeSlot,'10/12');
  const visits = groupVisits(r.records); assert.equal(visits.length,2); assert.equal(earliestSlot(visits[0].items),'10/12');
 });
-test('Reimport preserves status, sales, notes, saved coordinate, and restores archived tickets', () => {
+test('Reimport preserves status, notes, saved coordinate, and restores archived tickets', () => {
  const records = parseEcom(block('159000001')).records;
  let services = mergeImported([], [], records, () => 'uuid');
- services[0] = {...services[0], status:'done', plus:true, notes:'keep', coordinates:{lat:40.98,lng:28.72}};
+ services[0] = {...services[0], status:'done', notes:'keep', coordinates:{lat:40.98,lng:28.72}};
  const merged = mergeImported(services, [], [...records, ...parseEcom(block('159000002')).records], () => 'uuid2');
- assert.equal(merged.length,2); assert.equal(merged[0].status,'done'); assert.equal(merged[0].plus,true); assert.equal(merged[0].notes,'keep'); assert.equal(merged[0].coordinates.lat,40.98);
+ assert.equal(merged.length,2); assert.equal(merged[0].status,'done'); assert.equal(merged[0].notes,'keep'); assert.equal(merged[0].coordinates.lat,40.98);
  const restored=mergeImported([],services,records,()=> 'new');assert.equal(restored.length,1);assert.equal(restored[0].status,'pending');assert.equal(restored[0].notes,'keep');
 });
 test('Duplicates and malformed records are reported', () => {
@@ -22,10 +22,12 @@ test('Duplicates and malformed records are reported', () => {
  assert.equal(r.records.length,1); assert.equal(r.warnings.length,2);
  assert.equal(parseEcom('not a list').records.length,0);
 });
-test('Map destination includes neighborhood and uses saved coordinates exactly', () => {
+test('Map searches the full address and ignores saved coordinates', () => {
  const a = navigationAddress('Örnek sok. no:34 d:5 k:2 Site A blok','AMBARLI');
- assert.ok(a.includes('no:34')); assert.ok(a.includes('AMBARLI Mahallesi')); assert.ok(a.includes('Site A blok')); assert.ok(!a.includes('d:5'));
- assert.ok(getMapsSearchUrl('wrong','AMBARLI',{lat:40.98,lng:28.72}).includes('destination=40.98%2C28.72'));
+ assert.ok(a.includes('no:34')); assert.ok(a.includes('AMBARLI Mahallesi')); assert.ok(a.includes('Site A blok')); assert.ok(a.includes('d:5'));
+ assert.ok(a.includes('k:2'));
+ const url = new URL(getMapsSearchUrl('Örnek sok no:34 d:5','AMBARLI',{lat:40.98,lng:28.72}));
+ assert.equal(url.pathname,'/maps/search/');assert.equal(url.searchParams.get('api'),'1');assert.ok(url.searchParams.get('query').includes('Örnek sok no:34 d:5'));assert.equal(url.searchParams.has('destination'),false);assert.ok(!url.href.includes('40.98'));
  assert.equal(validCoordinates({lat:91,lng:20}),false);
 });
 test('Appointment state uses Istanbul time and exact end boundary', () => {

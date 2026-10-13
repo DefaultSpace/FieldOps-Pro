@@ -12,15 +12,17 @@ Saha teknisyenleri için eCom listesinden çalışan günlük iş takip yardımc
 - Tamamlananlar ve arşivde fişleri tarih/isim/adres/telefonla ara.
 - Gün sonunda kapanan işleri arşivle; bitmemiş işler listede kalır. Düzenli olarak JSON yedeği indir.
 
-Prim birimleri: bakım 260 TL, aksesuar 120 TL, Plus 130 TL. Günlük kazanç İstanbul tarihine göre hesaplanır. Fiş başına ek ücret yoktur.
+Prim ve satış takibi kaldırıldı. Uygulama saha işlerine odaklanır.
+
+Saat sırası: 10–12 (öncelikli), 12–14, 14–16, 16–18, 18–20, saatsiz. Avcılar profiline özel mahalle bölümleri ve Gümüşpala 10–12 uyarısı bulunur. Mahalle filtresi, seçilen mahallenin bütün saatlerini birlikte gösterir.
 
 ## Veri davranışı
 
 Kayıtlar aynı tarayıcının `routex-persist-v1` alanında tutulur. Sunucu hesabı veya otomatik cihaz eşitlemesi yoktur. Yedek geri yükleme, mevcut fişleri koruyarak yalnızca eksikleri ekler. Silinen son kayıt grubu açık oturumda geri alınabilir; silme arşive taşımaz.
 
-eCom aktarımı arşivde bulunan fişi bekleyen olarak geri açar; notlar ve satış adetleri korunur. Aktif fişin mevcut durumu korunur. Eski tamamlanma tarihi yeniden açılışta temizlenir; aynı fişin ayrı ziyaret sürümleri tutulmaz. Kaynak listede olmayan işler kendiliğinden silinmez.
+eCom aktarımı arşivde bulunan fişi bekleyen olarak geri açar; notlar korunur. Aktif fişin mevcut durumu korunur. Eski tamamlanma tarihi yeniden açılışta temizlenir; aynı fişin ayrı ziyaret sürümleri tutulmaz. Kaynak listede olmayan işler kendiliğinden silinmez.
 
-Uygulama kapalıyken zamanında bildirim garantisi yoktur. WhatsApp mesajları kullanıcı tarafından gönderilir. Harita bağlantısı adresi Google Maps’e aktarır; rota optimizasyonu veya adres doğrulaması yapılmaz. Tam çevrimdışı açılış desteklenmez.
+Uygulama kapalıyken zamanında bildirim garantisi yoktur. WhatsApp mesajları kullanıcı tarafından gönderilir. Harita bağlantısı tam adresi Google Maps aramasına aktarır; kayıtlı koordinat ve otomatik yol tarifi kullanılmaz; rota optimizasyonu veya adres doğrulaması yapılmaz. Tam çevrimdışı açılış desteklenmez.
 
 `UZERINE_TIKLA_CALISTIR.html` tarihî bağımsız sürümdür; güncel uygulama değildir. Güncel sürüm `src/` altındaki React uygulamasıdır.
 
@@ -35,3 +37,5 @@ npm run dev
 GitHub Pages paketi: `npm run build` (`/FieldOps-Pro/`). Sites kök alan adı: `SITE_DEPLOY=1 npm run build`.
 
 [13 Ekim 2026 saha inceleme ve değişiklik raporu](docs/SAHA-INCELEME-2026-10-13.md)
+
+[Güncel saha düzenlemesi](docs/SAHA-DUZENLEME-2026-10-13.md)
