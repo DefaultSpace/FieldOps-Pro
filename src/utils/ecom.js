@@ -1,15 +1,23 @@
 import { fieldRecord } from './fieldRecords.js'
+import { recordEvent, reopenRecord } from './history.js'
 import { districtFor } from './maps.js'
 import { normalizePhone } from './contacts.js'
 import { formatMahalle } from './profile.js'
 export const normalizeKey = value => String(value || '').normalize('NFKC').toLocaleLowerCase('tr-TR').replace(/\s+/g, ' ').trim();
 export function parseEcom(text) {
     const lines = text.replace(/\r/g, '').split('\n').map(l => l.replace(/^[\s\u200B\uFEFF]+|[\s\u200B\uFEFF]+$/g, '').replace(/^[-•*▪●]\s*/, '')).filter(Boolean);
-    const starts = lines.flatMap((l, i) => /^\d{7,12}$/.test(l) && /^(Saatsiz|\d{1,2}:\d{2}\s*[-–—]\s*\d{1,2}:\d{2})$/i.test(lines[i + 1] || '') ? [i] : []);
+    // Receipt candidates are counted independently of a valid appointment line.
+    // A standalone phone or material code is shown for review rather than silently ignored.
+    const starts = lines.flatMap((l, i) => /^\d{7,12}$/.test(l) ? [i] : []);
     const records = [], warnings = [];
+    const rejected = [];
     const seen = new Set();
     starts.forEach((start, index) => {
         const block = lines.slice(start, starts[index + 1] ?? lines.length);
+        const reject = reason => { rejected.push({receiptNo:block[0],reason,raw:block.join('\n')}); warnings.push(`${block[0]}: ${reason}`); };
+        if (!/^(Saatsiz|\d{1,2}:\d{2}\s*[-–—]\s*\d{1,2}:\d{2})$/i.test(block[1] || '')) { reject('Saat satırı okunamadı; aktarılmadı.'); return; }
+        const timeParts=block[1].match(/^(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})$/);
+        if(timeParts && (Number(timeParts[1])>23 || Number(timeParts[3])>23 || Number(timeParts[2])>59 || Number(timeParts[4])>59 || Number(timeParts[1])*60+Number(timeParts[2])>=Number(timeParts[3])*60+Number(timeParts[4]))) { reject('Geçersiz saat aralığı; aktarılmadı.'); return; }
         // Browser clipboard copies may omit all HTML list markers.
         const content = block.slice(2);
         const flagStart = content.findIndex((line, i) => i >= 2 && /^(Yeni|Devam|Açık|Kapalı)$/i.test(line));
@@ -37,8 +45,8 @@ export function parseEcom(text) {
             fields = [content[0], content[1], payload.join(' ').replace(/(?:\+?90\s*)?\(?0?\d{3}\)?[\s-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}/g, '').trim(), '', payload.join(' ')];
             warnings.push(`${receiptNo}: Mahalle ayrılamadı; adresi kontrol et. Fiş aktarılacak.`);
         }
-        if (fields.length < 4 || !fields[1]?.includes('|') || !fields[2]) { warnings.push(`${receiptNo}: Eksik kayıt; aktarılmadı.`); return; }
-        if (seen.has(receiptNo)) { warnings.push(`${receiptNo}: Tekrarlanan fiş atlandı.`); return; }
+        if (fields.length < 4 || !fields[1]?.includes('|') || !fields[2]) { reject('Eksik kayıt; aktarılmadı.'); return; }
+        if (seen.has(receiptNo)) { reject('Tekrarlanan fiş atlandı.'); return; }
         seen.add(receiptNo);
         const phoneMatches = (fields[4] || '').match(/(?:\+?90\s*)?\(?0?\d{3}\)?[\s-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}/g) || [];
         const phones = [...new Set(phoneMatches.map(normalizePhone).filter(Boolean))];
@@ -52,21 +60,26 @@ export function parseEcom(text) {
     // Count every recognizable receipt block, including ones that could not be parsed.
     const sourceReceiptCount = starts.length;
     const rejectedReceiptCount = sourceReceiptCount - records.length;
-    if (rejectedReceiptCount > 0) warnings.unshift(`${rejectedReceiptCount} fiş aktarılamadı. Uyarıları kontrol etmeden aktarımı onaylama.`);
     if (!starts.length) warnings.push('Fiş bulunamadı. eCom listesinin tamamını yapıştırın.');
     const date = text.match(/Tarih\s*\n\s*(\d{2})\.(\d{2})\.(\d{4})/);
     const sourceDate = date ? `${date[3]}-${date[2]}-${date[1]}` : '';
-    return { records, warnings, sourceDate, sourceReceiptCount, rejectedReceiptCount };
+    return { records, warnings, rejected, sourceDate, sourceReceiptCount, rejectedReceiptCount };
 }
 export function mergeImported(services, archive, records, createId, now = Date.now(), isExtra = false) {
     const result = [...services];
     for (const record of records) {
         const index = result.findIndex(s => s.receiptNo === record.receiptNo);
-        if (index >= 0) result[index] = { ...result[index], ...record };
+        if (index >= 0) {
+            const previous=result[index];
+            const timeSlot=previous.manualTimeSlot ? previous.timeSlot : record.timeSlot;
+            const changed=Object.keys(record).some(key=>JSON.stringify(previous[key])!==JSON.stringify(key==='timeSlot'?timeSlot:record[key]));
+            const merged={...previous,...record,...(record.timeSlot?{timeSlot,sourceTimeSlot:record.timeSlot}:{})};
+            result[index]=changed?recordEvent(merged,'imported',now):merged;
+        }
         else {
             const previous = archive.find(s => s.receiptNo === record.receiptNo);
-            if (previous) result.push({ ...previous, ...record, status: 'pending', completedAt: null, statusBeforeDone: null, removedFromList: false, restoredAt: now, availability: '', reminderAt: null, reminderNotifiedAt: null, actionReason: '', actionReceiptNo: '', actionRecordCount: null });
-            else result.push({ ...record, id: createId(), createdAt: now, status: 'pending', notes: '', isExtra });
+            if (previous) result.push({ ...reopenRecord(previous,now), ...record, sourceTimeSlot:record.timeSlot, timeSlot:previous.manualTimeSlot?previous.timeSlot:record.timeSlot });
+            else result.push({ ...record, sourceTimeSlot:record.timeSlot, id: createId(), createdAt: now, status: 'pending', notes: '', isExtra });
         }
     }
     return result.map(fieldRecord);

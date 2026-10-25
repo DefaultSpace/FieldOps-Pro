@@ -9,3 +9,10 @@ export function orderedVisits(visits,region) {
 export function morningNearby(visits,region) {
     return region==='Avcılar' ? visits.filter(v=>normal(v.mahalle)==='gumuspala' && normal(v.district || 'Avcılar')==='avcilar' && v.items.some(s=>open(s)&&isMorning(s.timeSlot))) : [];
 }
+export function nextVisit(visits,region,neighborhood='',now=Date.now()) {
+    const ready=visits.map(v=>({...v,items:v.items.filter(s=>open(s) && !(s.availability==='later' && (!s.reminderAt || s.reminderAt>now)))})).filter(v=>v.items.length);
+    const ordered=orderedVisits(ready,region);
+    if(!ordered.length)return null;
+    const slot=visitSlot(ordered[0]);
+    return ordered.find(v=>visitSlot(v)===slot && neighborhood && normal(v.mahalle)===normal(neighborhood)) || ordered[0];
+}

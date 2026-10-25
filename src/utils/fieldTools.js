@@ -1,6 +1,7 @@
 import { districtFor } from './maps.js'
 import { dayKey } from './workflow.js'
 import { normalizeKey } from './ecom.js'
+import { recordEvent } from './history.js'
 export function materialsFromNote(note) {
     const parts = new Map();
     String(note || '').split('\n').forEach(line => {
@@ -33,7 +34,7 @@ export function visitHistory(visit, services, archive) {
 }
 export function archiveFinishedDays(services, archive, now = Date.now()) {
     const day = dayKey;
-    const old = services.filter(s => ['done','cancelled'].includes(s.status) && day(s.completedAt || s.statusChangedAt || s.createdAt) !== day(now));
+    const old = services.filter(s => ['done','cancelled'].includes(s.status) && day(s.completedAt || s.statusChangedAt || s.createdAt) !== day(now)).map(s=>recordEvent({...s,archivedAt:now},'archived',now));
     const ids = new Set(old.map(s => s.id));
     return { services:services.filter(s => !ids.has(s.id)), archive:[...old,...archive] };
 }

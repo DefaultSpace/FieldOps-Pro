@@ -1,0 +1,77 @@
+import assert from 'node:assert/strict';
+import {spawn} from 'node:child_process';
+import {readFile,writeFile} from 'node:fs/promises';
+import {chromium} from 'playwright';
+const port=4187,base=`http://127.0.0.1:${port}/FieldOps-Pro/`;
+const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--host','127.0.0.1','--port',String(port),'--strictPort'],{stdio:'pipe'});
+let browser;
+try {
+    await new Promise((resolve,reject)=>{server.stdout.on('data',data=>{if(String(data).includes(String(port)))resolve();});server.on('error',reject);server.on('exit',code=>reject(new Error(`Preview exited: ${code}`)));});
+    browser=await chromium.launch({headless:true,...(process.env.FIELDOPS_CHROME?{executablePath:process.env.FIELDOPS_CHROME}:{})});
+    const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
+    const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));page.on('dialog',dialog=>dialog.accept());
+    page.setDefaultTimeout(10000);
+    await page.goto(base);
+    await page.getByLabel('Teknisyen ismi').fill('Test Teknisyeni');await page.getByLabel('Hangi bölgeye çıkıyorsun?').selectOption('Avcılar');await page.getByRole('button',{name:'Kişiyi kaydet'}).click();
+    await page.getByText('Çevrimdışı açılış hazır.',{exact:false}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Güncelle ve yeniden aç'}).count(),0);
+    const block=(id,name,slot)=>`${id}\n${slot}\n${name}\nBosch | Çamaşır Makinesi\nBaşaran sok no12 d4\nGÜMÜŞPALA MAH-AVCILAR+\n(555) 000-0000\nYeni\nGD\nOnarım`;
+    await page.getByRole('button',{name:'eCom listesini aktar',exact:true}).click();
+    await page.getByLabel('eCom servis listesi').fill([block('159000001','ÖRNEK MÜŞTERİ','10:00 - 12:00'),block('159000002','İKİNCİ MÜŞTERİ','12:00 - 14:00'),'159000003\nBozuk saat\nEksik'].join('\n'));
+    await page.getByLabel('eCom ekranındaki toplam').fill('3');
+    assert.equal(await page.getByRole('button',{name:'Listeyi aktar',exact:true}).isDisabled(),true);
+    await page.getByLabel('Uyarıları inceledim').check();await page.getByRole('button',{name:'Listeyi aktar',exact:true}).click();
+    await page.getByRole('button',{name:'Kapat',exact:true}).click();
+    const first=page.locator('.visit-card').filter({hasText:'159000001'});
+    assert.equal(new URL(await first.getByRole('link',{name:'Google Maps’te adresi ara'}).getAttribute('href')).searchParams.get('query'),'Başaran sok no 12');
+    await first.getByText('Notlar, saha durumu ve diğer işlemler',{exact:true}).click();
+    await first.getByRole('button',{name:'Müşteriye ulaşıldı',exact:true}).click();
+    await first.getByLabel('ÖRNEK MÜŞTERİ randevu saati').first().selectOption('14/16');
+    await first.getByRole('button',{name:'Not ekle',exact:true}).click();await first.getByLabel('ÖRNEK MÜŞTERİ malzeme ve iş notu').fill('576101 2 adet pompa');await first.getByRole('button',{name:'Notu kaydet'}).click();
+    await page.locator('.materials-panel > summary').click();await page.getByLabel('576101 · 2 adet araçta hazır').check();
+    await first.getByRole('button',{name:'Parça bekleniyor',exact:true}).click();
+    assert.match(await page.locator('.daily-plan').innerText(),/Sıradaki öneri: İKİNCİ MÜŞTERİ/);
+    await first.getByRole('button',{name:'Kartı küçült'}).click();assert.equal(await first.getByRole('link').count(),0);
+    await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:'test-artifacts/mobile.png',fullPage:true});
+    const snapshot=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state);
+    let state=await snapshot();let s=state.services.find(s=>s.receiptNo==='159000001');assert.equal(s.status,'waiting_parts');assert.equal(s.timeSlot,'14/16');assert.ok(s.contactedAt);assert.equal(s.materialPrepared['576101'],2);
+    await context.setOffline(true);await page.reload();await page.getByText('İnternet yok. Çevrimdışı açılış hazır.',{exact:false}).waitFor();
+    assert.equal((await snapshot()).services.length,2);await first.getByRole('button',{name:'Kartı aç'}).click();await first.getByText('Notlar, saha durumu ve diğer işlemler',{exact:true}).click();
+    await first.getByRole('button',{name:'Parça geldi · Ziyaret planla'}).click();
+    await first.getByRole('button',{name:'Notu düzenle'}).click();await first.getByLabel('ÖRNEK MÜŞTERİ malzeme ve iş notu').fill('576101 2 adet pompa\nÇevrimdışı not');await first.getByRole('button',{name:'Notu kaydet'}).click();
+    // Close the tab and open a new tab while the browser is offline.
+    await page.close();const reopened=await context.newPage();await reopened.goto(base);await reopened.locator('.visit-card').filter({hasText:'159000001'}).waitFor();
+    assert.ok((await reopened.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state.services)).find(s=>s.receiptNo==='159000001').visitNote.includes('Çevrimdışı not'));
+    reopened.on('dialog',dialog=>dialog.accept());reopened.on('pageerror',error=>errors.push(error.message));
+    await context.setOffline(false);
+    await reopened.getByRole('button',{name:'eCom listesini aktar',exact:true}).click();await reopened.getByLabel('eCom servis listesi').fill(block('159000001','ÖRNEK MÜŞTERİ','10:00 - 12:00'));
+    await reopened.getByText('Fiş 159000001: elle seçilen 14/16 korunacak; eCom saati 10/12.').waitFor();await reopened.getByLabel('Uyarıları inceledim').check();await reopened.getByRole('button',{name:'Listeyi aktar',exact:true}).click();await reopened.getByRole('button',{name:'Kapat',exact:true}).click();
+    await reopened.locator('.visit-card').filter({hasText:'159000001'}).getByRole('button',{name:'Ziyareti tamamla',exact:true}).click();
+    await reopened.getByRole('heading',{name:'Tamamlananlar',exact:true}).waitFor();await reopened.getByRole('button',{name:'Günlük işler',exact:true}).click();
+    await reopened.getByRole('button',{name:'Kapanan işleri arşivle'}).click();
+    await reopened.getByRole('button',{name:'eCom listesini aktar',exact:true}).click();await reopened.getByLabel('eCom servis listesi').fill(block('159000001','ÖRNEK MÜŞTERİ','10:00 - 12:00'));await reopened.getByLabel('Uyarıları inceledim').check();await reopened.getByRole('button',{name:'Listeyi aktar',exact:true}).click();await reopened.getByRole('button',{name:'Kapat',exact:true}).click();
+    state=await reopened.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state);s=state.services.find(s=>s.receiptNo==='159000001');assert.equal(s.status,'pending');assert.ok(s.history.some(e=>e.type==='completed'&&e.visitNote.includes('Çevrimdışı not')));assert.ok(s.history.some(e=>e.type==='reopened'));assert.equal(state.archive.length,0);
+    await reopened.getByRole('button',{name:'Tüm günü sil'}).click();await reopened.reload();await reopened.getByRole('button',{name:'İşlem öncesi kopyadan eksikleri kurtar'}).click();await reopened.getByRole('button',{name:'Eksik kayıtları ekle'}).click();
+    state=await reopened.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state);assert.equal(state.services.length,2);
+    assert.ok(await reopened.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    const downloadPromise=reopened.waitForEvent('download');await reopened.getByRole('button',{name:'Yedek indir',exact:true}).click();const download=await downloadPromise;await download.saveAs('test-artifacts/backup.json');
+    const fresh=await browser.newContext({viewport:{width:1280,height:900}});const desktop=await fresh.newPage();await desktop.goto(base);await desktop.getByLabel('Teknisyen ismi').fill('Yeni Cihaz');await desktop.getByRole('button',{name:'Kişiyi kaydet'}).click();
+    await desktop.locator('input[type=file]').setInputFiles('test-artifacts/backup.json');await desktop.getByRole('button',{name:'Eksik kayıtları ekle'}).click();assert.equal(await desktop.locator('.visit-card').count(),2);await desktop.evaluate(()=>scrollTo(0,0));await desktop.screenshot({path:'test-artifacts/desktop.png',fullPage:true});
+    // Upgrade from the previously deployed notification-only worker.
+    const workerPath='dist/reminder-sw.js';const originalWorker=await readFile(workerPath,'utf8');
+    try {
+        await writeFile(workerPath,"self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));");
+        const legacy=await browser.newContext();const upgrade=await legacy.newPage();
+        await upgrade.goto(base+'manifest.json');
+        await upgrade.evaluate(async()=>{await navigator.serviceWorker.register('./reminder-sw.js');await navigator.serviceWorker.ready;localStorage.setItem('routex-persist-v1',JSON.stringify({version:1,state:{technicianName:'Eski kullanıcı',region:'Avcılar',services:[],archive:[]}}));});
+        await writeFile(workerPath,originalWorker);
+        await upgrade.goto(base);await upgrade.getByRole('button',{name:'Güncelle ve yeniden aç'}).waitFor();
+        assert.equal(await upgrade.getByText('Çevrimdışı açılış hazır.',{exact:false}).count(),0);
+        await upgrade.getByRole('button',{name:'Güncelle ve yeniden aç'}).click();await upgrade.getByText('Çevrimdışı açılış hazır.',{exact:false}).waitFor();
+        assert.equal(await upgrade.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state.technicianName),'Eski kullanıcı');
+        await legacy.setOffline(true);await upgrade.reload();await upgrade.getByText('İnternet yok. Çevrimdışı açılış hazır.',{exact:false}).waitFor();
+        await legacy.close();
+    } finally {await writeFile(workerPath,originalWorker);}
+    assert.deepEqual(errors,[]);
+    console.log('PASS: import review, manual time, contact, parts, materials, compact card, short maps URL, offline reload/new tab/edit, completion/reopen history, checkpoint recovery, backup device transfer, mobile layout.');
+} finally {await browser?.close();server.kill();}

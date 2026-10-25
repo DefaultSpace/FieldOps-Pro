@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { completionDay, surveyMessage, REGIONS, formatMahalle } from '../src/utils/profile.js';
-import { navigationAddress, districtFor } from '../src/utils/maps.js';
+import { districtFor } from '../src/utils/maps.js';
 import { parseEcom } from '../src/utils/ecom.js';
 
 test('Survey uses technician, appliance and operation rather than brand or model', () => {

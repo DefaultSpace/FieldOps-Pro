@@ -180,3 +180,27 @@ button:disabled { opacity:.45; cursor:not-allowed; } button:focus-visible,a:focu
     font-weight: 700 !important;
 }
 
+/* Field workflow: compact summary, optional secondary actions, touch-sized controls. */
+.compact-metrics {display:flex;flex-wrap:wrap;gap:0;border:1px solid #263548;border-radius:12px;overflow:hidden;}
+.compact-metrics .metric {flex:1;min-width:100px;padding:12px;border:0;border-radius:0;box-shadow:none;}
+.compact-metrics .metric strong {font-size:24px;}
+.compact-metrics .metric small {display:none;}
+.daily-plan,.settings-panel {margin:16px 0;padding:16px;background:#111c2a;border:1px solid #2a3d50;border-radius:12px;}
+.daily-plan summary,.secondary-actions summary,.settings-panel summary {cursor:pointer;min-height:44px;padding:10px 0;font-weight:600;}
+.daily-plan label,.field-controls label {display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:10px 0;}
+.daily-plan small {display:block;line-height:1.6;color:#b0c2d5;}
+.daily-plan select,.field-controls select,.history-panel input {max-width:100%;padding:10px;background:#0c1522;border:1px solid #3a4b60;border-radius:8px;color:#e6eef6;min-height:44px;}
+.card-summary-actions,.field-controls {display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:10px 0;}
+.card-summary-actions span {font-size:13px;color:#9beddb;}
+.card-summary-actions button {min-height:44px;}
+.secondary-actions {border-top:1px solid #2a3d50;margin-top:12px;}
+.field-controls p {width:100%;}
+.check-line {display:flex!important;flex-direction:row!important;align-items:center;gap:12px;margin:14px 0;line-height:1.6;}
+.check-line input[type=checkbox] {width:22px!important;height:22px!important;min-width:22px;accent-color:#69ddc3;}
+.material-preparation {padding:12px;border:1px solid #2a3d50;border-radius:10px;}
+.raw-record {white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;padding:12px;background:#0c1522;}
+.field-modal details {padding:10px 0;overflow-wrap:anywhere;}
+.field-modal > small {display:block;margin-top:12px;line-height:1.6;}
+.history-panel article {overflow-wrap:anywhere;}
+@media(max-width:540px){.compact-metrics {display:flex;}.compact-metrics .metric {padding:10px 8px;}.compact-metrics .metric span {font-size:12px;}.daily-plan {padding:12px;}.card-summary-actions {gap:8px;}}
+

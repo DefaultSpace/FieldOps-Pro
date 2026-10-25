@@ -1,3 +1,4 @@
 node_modules/
 dist/
 .openai/*.zip
+test-artifacts/
