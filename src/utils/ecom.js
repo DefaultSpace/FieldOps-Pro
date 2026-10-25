@@ -49,10 +49,14 @@ export function parseEcom(text) {
         const flags = flagStart >= 0 ? content.slice(flagStart) : [];
         records.push({ receiptNo, name: fields[0], device: fields[1], address: fields[2], mahalle, district: fields[3].match(/[-–]\s*([^+]+)/)?.[1]?.trim() || payload.join(' ').match(/MAH(?:ALLESİ)?\s*[-–]\s*([^+]+)/i)?.[1]?.trim() || '', phone: phones[0] || '', phones, timeSlot, warranty: flags[1] || '', jobType: flags[2] || '', addressWarning: !/\bno\s*[:.]?\s*\d/i.test(fields[2]) || !mahalle });
     });
+    // Count every recognizable receipt block, including ones that could not be parsed.
+    const sourceReceiptCount = starts.length;
+    const rejectedReceiptCount = sourceReceiptCount - records.length;
+    if (rejectedReceiptCount > 0) warnings.unshift(`${rejectedReceiptCount} fiş aktarılamadı. Uyarıları kontrol etmeden aktarımı onaylama.`);
     if (!starts.length) warnings.push('Fiş bulunamadı. eCom listesinin tamamını yapıştırın.');
     const date = text.match(/Tarih\s*\n\s*(\d{2})\.(\d{2})\.(\d{4})/);
     const sourceDate = date ? `${date[3]}-${date[2]}-${date[1]}` : '';
-    return { records, warnings, sourceDate };
+    return { records, warnings, sourceDate, sourceReceiptCount, rejectedReceiptCount };
 }
 export function mergeImported(services, archive, records, createId, now = Date.now(), isExtra = false) {
     const result = [...services];
