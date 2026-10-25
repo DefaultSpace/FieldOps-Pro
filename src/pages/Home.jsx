@@ -6,7 +6,6 @@ import { copyText } from '../utils/contacts'
 import { ContactActions } from '../components/ContactActions'
 import { BackupPanel } from '../components/BackupPanel'
 import { todaysCompleted } from '../utils/workflow'
-import { useNavigate } from 'react-router-dom'
 import { useMemo, useState, useEffect } from 'react'
 import { useServiceStore } from '../store/useServiceStore'
 import { ServiceForm } from '../components/ServiceForm'
@@ -24,7 +23,6 @@ import { ArrowUpRight, ClipboardPaste, Search, MapPin, Check, Clock, ChevronDown
 import { orderedVisits, visitSlot, morningNearby, isMorning } from '../utils/scheduling'
 
 export const Home = () => {
-    const navigate = useNavigate();
     const region = useServiceStore(state => state.region);
     const { services, archive, lastImport, updateService, completeVisit, startNewDay, undoVisit, clearDay } = useServiceStore();
     const [mahalleFilter,setMahalleFilter] = useState('');
@@ -90,7 +88,7 @@ export const Home = () => {
                 <button className="visit-address address-copy" onClick={async()=>setNotice(await copyText([v.address,v.mahalle,location.district].filter(Boolean).join(', '))?'Adres kopyalandı.':'Adres kopyalanamadı.')}><MapPin size={16}/>{v.address}<small>Adresi kopyala</small></button>
                 <div className="device-tags">{[...new Set(v.items.map(s => [s.device?.split('|').slice(0,2).join(' · ').trim() || s.notes || 'Cihaz belirtilmemiş', s.jobType?.trim() || 'İş türü belirtilmemiş'].join(' — ')))].map(d => <span key={d}>{d}</span>)}</div>
                 {v.items.some(s => s.addressWarning) && <div className="location-note">Bina numarasını kontrol et</div>}
-                <div className="visit-actions"><a className="primary-btn" target="_blank" rel="noreferrer" href={getMapsSearchUrl(v.address, v.mahalle, null,v.district)}>Google Maps’te adresi ara <ArrowUpRight size={16}/></a>{pending.length > 0 && <button className="finish-btn" onClick={() => { if (!confirm('Resimleri eCom’a yükledin mi?\nFieldOps kaydı tamamlanacak. eCom fişini ayrıca kapatmalısın.')) return; completeVisit(pending.map(s=>s.id)); navigate('/completed'); }}><Check size={17}/>Ziyareti tamamla</button>}</div>
+                <div className="visit-actions"><a className="primary-btn" target="_blank" rel="noreferrer" href={getMapsSearchUrl(v.address, v.mahalle, null,v.district)}>Google Maps’te adresi ara <ArrowUpRight size={16}/></a>{pending.length > 0 && <button className="finish-btn" onClick={() => { if (!confirm('Resimleri eCom’a yükledin mi?\nFieldOps kaydı tamamlanacak. eCom fişini ayrıca kapatmalısın.')) return; completeVisit(pending.map(s=>s.id)); }}><Check size={17}/>Ziyareti tamamla</button>}</div>
                 {!pending.length && v.items.some(s => s.status === 'done') && <button className="undo-btn" onClick={() => undoVisit(v.items.map(s => s.id))}>Tamamlamayı geri al</button>}
                 <ContactActions service={{...v.items[0],phones:[...new Set(v.items.flatMap(s=>[s.phone,...(s.phones||[])]).filter(Boolean))]}}/>
                 <details className="secondary-actions"><summary>Notlar, saha durumu ve diğer işlemler</summary>
