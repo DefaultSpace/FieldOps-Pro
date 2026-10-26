@@ -24,19 +24,19 @@ try {
     await page.getByRole('button',{name:'Kapat',exact:true}).click();
     const first=page.locator('.visit-card').filter({hasText:'159000001'});
     assert.equal(new URL(await first.getByRole('link',{name:'Google Maps’te adresi ara'}).getAttribute('href')).searchParams.get('query'),'Başaran sok no 12');
-    await first.getByText('Notlar, saha durumu ve diğer işlemler',{exact:true}).click();
+    await first.getByRole('button',{name:'Ayrıntılar',exact:true}).click();await first.getByText('Saat, iletişim ve geçmiş',{exact:true}).click();
     await first.getByRole('button',{name:'Müşteriye ulaşıldı',exact:true}).click();
     await first.getByLabel('ÖRNEK MÜŞTERİ randevu saati').first().selectOption('14/16');
     await first.getByRole('button',{name:'Not ekle',exact:true}).click();await first.getByLabel('ÖRNEK MÜŞTERİ malzeme ve iş notu').fill('576101 2 adet pompa');await first.getByRole('button',{name:'Notu kaydet'}).click();
-    await page.locator('.materials-panel > summary').click();await page.getByLabel('576101 · 2 adet araçta hazır').check();
+    await page.locator('.optional-tools > summary').click();await page.locator('.materials-panel > summary').click();await page.getByLabel('576101 · 2 adet araçta hazır').check();
     await first.getByRole('button',{name:'Parça bekleniyor',exact:true}).click();
     assert.match(await page.locator('.daily-plan').innerText(),/Sıradaki öneri: İKİNCİ MÜŞTERİ/);
-    await first.getByRole('button',{name:'Kartı küçült'}).click();assert.equal(await first.getByRole('link').count(),0);
+    await first.getByRole('button',{name:'Kapat',exact:true}).click();assert.equal(await first.getByRole('link').count(),1);assert.equal(await first.locator('.compact-details:visible').count(),0);assert.ok((await first.boundingBox()).height<310);
     await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:'test-artifacts/mobile.png',fullPage:true});
     const snapshot=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state);
     let state=await snapshot();let s=state.services.find(s=>s.receiptNo==='159000001');assert.equal(s.status,'waiting_parts');assert.equal(s.timeSlot,'14/16');assert.ok(s.contactedAt);assert.equal(s.materialPrepared['576101'],2);
     await context.setOffline(true);await page.reload();await page.getByText('İnternet yok. Çevrimdışı açılış hazır.',{exact:false}).waitFor();
-    assert.equal((await snapshot()).services.length,2);await first.getByRole('button',{name:'Kartı aç'}).click();await first.getByText('Notlar, saha durumu ve diğer işlemler',{exact:true}).click();
+    assert.equal((await snapshot()).services.length,2);await first.getByRole('button',{name:'Ayrıntılar',exact:true}).click();await first.getByText('Saat, iletişim ve geçmiş',{exact:true}).click();
     await first.getByRole('button',{name:'Parça geldi · Ziyaret planla'}).click();
     await first.getByRole('button',{name:'Notu düzenle'}).click();await first.getByLabel('ÖRNEK MÜŞTERİ malzeme ve iş notu').fill('576101 2 adet pompa\nÇevrimdışı not');await first.getByRole('button',{name:'Notu kaydet'}).click();
     // Close the tab and open a new tab while the browser is offline.
@@ -58,6 +58,37 @@ try {
     const downloadPromise=reopened.waitForEvent('download');await reopened.getByRole('button',{name:'Yedek indir',exact:true}).click();const download=await downloadPromise;await download.saveAs('test-artifacts/backup.json');
     const fresh=await browser.newContext({viewport:{width:1280,height:900}});const desktop=await fresh.newPage();await desktop.goto(base);await desktop.getByLabel('Teknisyen ismi').fill('Yeni Cihaz');await desktop.getByRole('button',{name:'Kişiyi kaydet'}).click();
     await desktop.locator('input[type=file]').setInputFiles('test-artifacts/backup.json');await desktop.getByRole('button',{name:'Eksik kayıtları ekle'}).click();assert.equal(await desktop.locator('.visit-card').count(),2);await desktop.evaluate(()=>scrollTo(0,0));await desktop.screenshot({path:'test-artifacts/desktop.png',fullPage:true});
+    // Long-list regression: compact by default, receipt beside name, one open card,
+    // phone selection and independent time/neighborhood filtering.
+    await desktop.setViewportSize({width:390,height:844});
+    await desktop.evaluate(()=>{
+        const state=JSON.parse(localStorage.getItem('routex-persist-v1'));
+        const template=state.state.services[0];
+        state.state.services=Array.from({length:16},(_,i)=>({...template,id:'compact-'+i,receiptNo:String(160000001+i),name:'ÖRNEK MÜŞTERİ '+String(i+1).padStart(2,'0'),timeSlot:i<8?'10/12':'12/14',mahalle:i%2?'Ambarlı':'Gümüşpala',address:'Örnek sok no '+(12+i)+' d3',status:'pending',phones:['905550000000','905550000001'],history:[],collapsed:false,visitNote:''}));
+        state.state.services.push({...state.state.services[0],id:'compact-extra',receiptNo:'160000099',device:'Siemens | Bulaşık Makinesi'});
+        localStorage.setItem('routex-persist-v1',JSON.stringify(state));
+    });
+    await desktop.reload();await desktop.locator('.visit-card').first().waitFor();
+    assert.equal(await desktop.locator('.visit-card').count(),16);assert.equal(await desktop.locator('.compact-details:visible').count(),0);
+    const card=desktop.locator('.visit-card').filter({has:desktop.getByRole('button',{name:'Fiş 160000001 kopyala',exact:true})});
+    assert.equal(await card.locator('.compact-identity .receipt-badge').count(),2);
+    assert.ok((await card.boundingBox()).height<330);
+    await card.getByLabel('Müşteri telefonu').selectOption('905550000001');
+    await card.getByRole('button',{name:'Ayrıntılar',exact:true}).click();
+    await card.getByRole('button',{name:'Not ekle',exact:true}).click();await card.getByLabel('ÖRNEK MÜŞTERİ 01 malzeme ve iş notu').fill('Kaydedilmemiş deneme notu');
+    await desktop.locator('.visit-card').nth(1).getByRole('button',{name:'Ayrıntılar',exact:true}).click();
+    assert.equal(await desktop.locator('.compact-details:visible').count(),1);assert.equal(await card.locator('.compact-details:visible').count(),0);
+    await card.getByRole('button',{name:'Ayrıntılar',exact:true}).click();assert.equal(await card.getByLabel('ÖRNEK MÜŞTERİ 01 malzeme ve iş notu').inputValue(),'Kaydedilmemiş deneme notu');
+    await desktop.getByRole('button',{name:'Ayrıntıları kapat',exact:true}).click();
+    await desktop.getByLabel('Saat dilimi').selectOption('12/14');assert.equal(await desktop.locator('.visit-card').count(),8);
+    await desktop.locator('.quick-filters').getByLabel('Mahalle').selectOption('Ambarlı');assert.equal(await desktop.locator('.visit-card').count(),4);
+    await desktop.getByRole('button',{name:'Filtreleri temizle'}).click();assert.equal(await desktop.locator('.visit-card').count(),16);
+    await desktop.getByLabel('Ziyaret ara').fill('160000099');assert.equal(await desktop.locator('.visit-card').count(),1);
+    await desktop.getByRole('button',{name:'Filtreleri temizle'}).click();
+    await desktop.evaluate(()=>scrollTo(0,document.querySelector('.compact-search-controls').getBoundingClientRect().top+scrollY));
+    assert.ok(await desktop.evaluate(()=>document.querySelector('.field-header').getBoundingClientRect().bottom<=0));
+    assert.ok(await desktop.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+    await desktop.screenshot({path:'test-artifacts/compact-mobile.png'});
     // Upgrade from the previously deployed notification-only worker.
     const workerPath='dist/reminder-sw.js';const originalWorker=await readFile(workerPath,'utf8');
     try {
