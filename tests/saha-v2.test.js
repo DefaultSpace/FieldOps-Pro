@@ -1,3 +1,4 @@
+import {fieldRecord,fieldState} from '../src/utils/fieldRecords.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {parseEcom,mergeImported,groupVisits} from '../src/utils/ecom.js';
@@ -33,10 +34,12 @@ test('repeat visits retain each completion, original notes and reason across bac
  const legacy=reopenRecord({...record,status:'done',completedAt:now},now+1000);assert.equal(legacy.history[0].type,'completed');
  assert.equal(dailyActivity([second],[],[],dayKey(now)).length,3);
 });
-test('waiting for parts remains open at day close and is excluded from next recommendation',()=>{
- const parts={...record,status:'waiting_parts'};
+test('retired parts status migrates without losing notes and re-enters normal planning',()=>{
+ const legacy={...record,status:'waiting_parts',contactedAt:now};const parts=fieldRecord(legacy);
+ assert.equal(parts.status,'pending');assert.equal(parts.visitNote,record.visitNote);assert.equal(parts.contactedAt,now);
+ assert.equal(fieldState({services:[legacy],archive:[legacy]}).archive[0].status,'pending');
  assert.equal(closeDay([parts],[],now).services.length,1);
- assert.equal(nextVisit(groupVisits([parts]),'Avcılar'),null);
+ assert.ok(nextVisit(groupVisits([parts]),'Avcılar'));
  const visits=groupVisits([{...record,id:'a',name:'Uzak',mahalle:'Ambarlı'}, {...record,id:'b',name:'Yakın'}, {...record,id:'c',name:'Daha geç',timeSlot:'12/14'}]);
  assert.equal(nextVisit(visits,'Avcılar','Gümüşpala',now).name,'Yakın');
  assert.equal(nextVisit(visits,'Avcılar','Başka mahalle',now).items[0].timeSlot,'10/12');
@@ -54,5 +57,5 @@ test('backup validates new fields before writes and retains current notes on mer
  assert.throws(()=>readBackup(JSON.stringify({s:[{...record,materialPrepared:{576101:'2'}}],a:[]})));
  assert.throws(()=>readBackup(JSON.stringify({version:99,s:[],a:[]})));
  const backup=readBackup(JSON.stringify({version:3,s:[{...record,status:'waiting_parts'}],a:[]}));
- assert.equal(backup.s[0].status,'waiting_parts');assert.equal(mergeBackup({services:[record],archive:[]},backup).services[0].notes,record.notes);
+ assert.equal(backup.s[0].status,'pending');assert.equal(mergeBackup({services:[record],archive:[]},backup).services[0].notes,record.notes);
 });

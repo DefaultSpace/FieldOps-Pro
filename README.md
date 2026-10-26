@@ -27,12 +27,12 @@ eCom aktarımı arşivde bulunan fişi bekleyen olarak geri açar; notlar, önce
 ## Saha V2
 
 - Aktarım önizlemesi bağımsız 7–12 rakamlı fiş adaylarını, okunabilen ve reddedilen kayıtları sayar. Bozuk saat ve eksik kayıtlar ham metniyle görünür. İsteğe bağlı eCom ekran toplamı eksik kopyalamayı denetler. Uyarılarda açık onay gerekir; aktarım sonrası fişlerin aktif listede olduğu doğrulanır. Metinde hiç bulunmayan fişler, kaynak toplamı girilmeden saptanamaz; tek başına yazılmış telefon/malzeme numarası da aday sayılabilir.
-- Sabah kontrolü 10–12 önceliğini ve saat sırasını korur; aynı dilimde seçilen mahalleyi önerir. Yol süresi hesaplanmaz. Parça bekleyen ve “Sonra gel” zamanı gelmeyen işler önerilmez.
+- Sabah kontrolü 10–12 önceliğini ve saat sırasını korur; aynı dilimde seçilen mahalleyi önerir. Yol süresi hesaplanmaz. “Sonra gel” zamanı gelmeyen işler önerilmez.
 - Malzeme kodu, adet, müşteri ve fiş eşleşmesiyle günlük araç hazırlık listesi vardır. Hazırlık işareti kullanım miktarından ayrıdır ve her gün yenilenir; eCom stoğunu değiştirmez.
 - Günlük liste kısa kartlarla açılır. Müşteri adı ve tüm fiş numaraları başlıkta birlikte görünür; numaraya dokunmak kopyalar. Adres, telefon seçimi/kopyalama, WhatsApp, harita ve tamamlama ayrıntıları açmadan kullanılabilir. Bir seferde tek kartın ayrıntısı görünür; kartı kapatmak kaydedilmemiş not taslağını silmez. Tamamlama mevcut ekranda kalır.
 - Mobilde üst logo/menü kaydırıldığında ekranı örtmez. Arama, mahalle ve saat filtreleri listenin başında sabit kalır; sonuç sayısı ve filtreleri temizleme seçeneği vardır. Plan ve malzeme araçları günlük listenin üstünden isteğe bağlı açılır bölüme taşınmıştır. Büyük yazı seçimi “Görünüm ayarları”ndadır.
 - Ana ekranın “İptal edilenler” sekmesi iptalleri, “Tamamlananlar” tüm tamamlanmış fişleri tarihleriyle, “Arşiv” aktif listeden çıkarılmış kayıtları gösterir.
-- Tamamlama, tekrar açma, erteleme, iptal, parça bekleme, iletişim, not/saat değişiklikleri ve silme günlük geçmişte izlenebilir. Önceden tutulmamış geçmiş geriye dönük oluşturulamaz; eski fişin bilinen tamamlanma zamanı korunur.
+- Tamamlama, tekrar açma, erteleme, iptal, not/saat değişiklikleri ve silme günlük geçmişte izlenebilir. Önceden tutulmamış geçmiş geriye dönük oluşturulamaz; eski fişin bilinen tamamlanma zamanı korunur.
 - Benzer müşteri/telefon ve adres yazımları kontrol için işaretlenir; daire farkları korunur, otomatik belirsiz eşleştirme yapılmaz.
 
 ## Çevrimdışı kullanım ve adres
@@ -62,3 +62,5 @@ Tarayıcı testi yalnızca sentetik müşteri kayıtları kullanır; aktarım, s
 [13 Ekim 2026 saha inceleme ve değişiklik raporu](docs/SAHA-INCELEME-2026-10-13.md)
 
 [Güncel saha düzenlemesi](docs/SAHA-DUZENLEME-2026-10-13.md)
+
+“Müşteriye ulaşıldı” ve “Parça bekleniyor / parça geldi” kontrolleri kaldırılmıştır. Eski kayıt/yedeklerdeki parça bekleyen fişler veri kaybı olmadan bekleyen fişe dönüştürülür; eski notlar ve işlem geçmişi korunur.

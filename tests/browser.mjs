@@ -24,20 +24,18 @@ try {
     await page.getByRole('button',{name:'Kapat',exact:true}).click();
     const first=page.locator('.visit-card').filter({hasText:'159000001'});
     assert.equal(new URL(await first.getByRole('link',{name:'Google Maps’te adresi ara'}).getAttribute('href')).searchParams.get('query'),'Başaran sok no 12');
-    await first.getByRole('button',{name:'Ayrıntılar',exact:true}).click();await first.getByText('Saat, iletişim ve geçmiş',{exact:true}).click();
-    await first.getByRole('button',{name:'Müşteriye ulaşıldı',exact:true}).click();
+    await first.getByRole('button',{name:'Ayrıntılar',exact:true}).click();await first.getByText('Saat ve geçmiş',{exact:true}).click();
+    assert.equal(await page.getByRole('button',{name:/Müşteriye ulaşıldı|Parça bekleniyor|Parça geldi/}).count(),0);
     await first.getByLabel('ÖRNEK MÜŞTERİ randevu saati').first().selectOption('14/16');
     await first.getByRole('button',{name:'Not ekle',exact:true}).click();await first.getByLabel('ÖRNEK MÜŞTERİ malzeme ve iş notu').fill('576101 2 adet pompa');await first.getByRole('button',{name:'Notu kaydet'}).click();
     await page.locator('.optional-tools > summary').click();await page.locator('.materials-panel > summary').click();await page.getByLabel('576101 · 2 adet araçta hazır').check();
-    await first.getByRole('button',{name:'Parça bekleniyor',exact:true}).click();
     assert.match(await page.locator('.daily-plan').innerText(),/Sıradaki öneri: İKİNCİ MÜŞTERİ/);
     await first.getByRole('button',{name:'Kapat',exact:true}).click();assert.equal(await first.getByRole('link').count(),1);assert.equal(await first.locator('.compact-details:visible').count(),0);assert.ok((await first.boundingBox()).height<310);
     await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:'test-artifacts/mobile.png',fullPage:true});
     const snapshot=()=>page.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state);
-    let state=await snapshot();let s=state.services.find(s=>s.receiptNo==='159000001');assert.equal(s.status,'waiting_parts');assert.equal(s.timeSlot,'14/16');assert.ok(s.contactedAt);assert.equal(s.materialPrepared['576101'],2);
+    let state=await snapshot();let s=state.services.find(s=>s.receiptNo==='159000001');assert.equal(s.status,'pending');assert.equal(s.timeSlot,'14/16');assert.equal(s.materialPrepared['576101'],2);
     await context.setOffline(true);await page.reload();await page.getByText('İnternet yok. Çevrimdışı açılış hazır.',{exact:false}).waitFor();
-    assert.equal((await snapshot()).services.length,2);await first.getByRole('button',{name:'Ayrıntılar',exact:true}).click();await first.getByText('Saat, iletişim ve geçmiş',{exact:true}).click();
-    await first.getByRole('button',{name:'Parça geldi · Ziyaret planla'}).click();
+    assert.equal((await snapshot()).services.length,2);await first.getByRole('button',{name:'Ayrıntılar',exact:true}).click();await first.getByText('Saat ve geçmiş',{exact:true}).click();
     await first.getByRole('button',{name:'Notu düzenle'}).click();await first.getByLabel('ÖRNEK MÜŞTERİ malzeme ve iş notu').fill('576101 2 adet pompa\nÇevrimdışı not');await first.getByRole('button',{name:'Notu kaydet'}).click();
     // Close the tab and open a new tab while the browser is offline.
     await page.close();const reopened=await context.newPage();await reopened.goto(base);await reopened.locator('.visit-card').filter({hasText:'159000001'}).waitFor();
@@ -105,5 +103,5 @@ try {
         await legacy.close();
     } finally {await writeFile(workerPath,originalWorker);}
     assert.deepEqual(errors,[]);
-    console.log('PASS: import review, manual time, contact, parts, materials, compact card, short maps URL, offline reload/new tab/edit, completion/reopen history, checkpoint recovery, backup device transfer, mobile layout.');
+    console.log('PASS: import review, manual time, removed status controls, materials, compact card, short maps URL, offline reload/new tab/edit, completion/reopen history, checkpoint recovery, backup device transfer, mobile layout.');
 } finally {await browser?.close();server.kill();}
