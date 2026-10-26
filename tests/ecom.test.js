@@ -69,7 +69,6 @@ test('Mobile clipboard joins address, neighborhood and phone into one line', () 
  assert.equal(r.records[0].mahalle,'MUSTAFAKEMALPAŞA');
  assert.equal(r.records[0].phones.length,2); assert.equal(r.records[0].jobType,'Montaj');
  assert.equal(r.records[0].timeSlot,'16/18');
- const wrapped=text.replace('MUSTAFAKEMALPAŞA MAH-AVCILAR+', 'MUSTAFAKEMALPAŞA\nMAH-AVCILAR+');
  // Visual line wrapping without actual newlines is already covered above.
  const split=text.replace('KARADUT SK N110 D10MUSTAFAKEMALPAŞA','KARADUT SK N110 D10\nMUSTAFAKEMALPAŞA');
  assert.deepEqual(parseEcom(split).records,r.records);

@@ -17,9 +17,9 @@ export function ReminderCenter() {
                     const notify = async () => {
                         try {
                             if ('serviceWorker' in navigator) {
-                                await navigator.serviceWorker.register(`${import.meta.env.BASE_URL}reminder-sw.js`);
-                                const registration = await navigator.serviceWorker.ready;
-                                await registration.showNotification('FieldOps · Ziyaret zamanı', options);
+                                const registration = await navigator.serviceWorker.getRegistration(import.meta.env.BASE_URL);
+                                if(registration?.active)await registration.showNotification('FieldOps · Ziyaret zamanı', options);
+                                else new Notification('FieldOps · Ziyaret zamanı', options);
                             } else {
                                 const notification = new Notification('FieldOps · Ziyaret zamanı', options);
                                 notification.onclick = () => { window.focus(); window.location.hash = '/'; notification.close(); };

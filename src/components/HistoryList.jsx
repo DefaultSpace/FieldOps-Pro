@@ -3,6 +3,7 @@ import { useServiceStore } from '../store/useServiceStore'
 import { dayKey, uniqueRecords, statusLabel } from '../utils/workflow'
 import { ServiceCard } from './ServiceCard'
 import { VisitNote } from './VisitNote'
+import { VisitHistory } from './VisitHistory'
 export function HistoryList({completed=false}) {
  const {services,archive,undoVisit,restoreVisit,removeVisit}=useServiceStore();
  const [query,setQuery]=useState(''),[date,setDate]=useState('');
@@ -16,7 +17,7 @@ export function HistoryList({completed=false}) {
  {!filtered.length&&<div className="empty-state">Bu filtrede kayıt yok.</div>}
  {Object.keys(days).sort().reverse().map(day=><section className="completed-day" key={day}><h2>{day==='Tarihsiz'?day:new Date(`${day}T12:00:00+03:00`).toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul',day:'numeric',month:'long',year:'numeric'})} · {days[day].length} fiş</h2>
  {days[day].sort((a,b)=>(b.completedAt||b.createdAt)-(a.completedAt||a.createdAt)).map(s=><details className="history-record" key={s.id}><summary><strong>{s.name}</strong><span>Fiş {s.receiptNo||'—'} · {s.jobType||'Servis'} · {statusLabel(s.status)}</span></summary>
- <p>{s.completedAt?`Tamamlanma: ${new Date(s.completedAt).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})}`:'Tamamlanma zamanı kayıtlı değil.'}</p><ServiceCard service={s} completedView/><VisitNote visit={{...s,items:[s]}}/>
+ <p>{s.completedAt?`Tamamlanma: ${new Date(s.completedAt).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})}`:'Tamamlanma zamanı kayıtlı değil.'}</p><ServiceCard service={s} completedView/><VisitNote visit={{...s,items:[s]}}/><VisitHistory visit={{...s,items:[s]}}/>
  <button className="quiet-btn" onClick={()=>{if(confirm('Bu fiş kalan işlere geri alınsın mı?'))s.status==='done'?undoVisit([s.id]):restoreVisit([s.id]);}}>Kalan işlere geri al</button><button className="undo-btn" onClick={()=>{if(confirm('Bu fiş ve notları silinsin mi?'))removeVisit([s.id]);}}>Fişi sil</button></details>)}
  </section>)}
  </div>;
