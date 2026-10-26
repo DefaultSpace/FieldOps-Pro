@@ -58,7 +58,6 @@ export const useServiceStore = create(persist((set,get) => ({
             const merged={...s,...updates};
             const type=updates.status && updates.status!==s.status?updates.status:
                 updates.timeSlot!==undefined && updates.timeSlot!==s.timeSlot?'schedule':
-                updates.contactedAt!==undefined && updates.contactedAt!==s.contactedAt?(updates.contactedAt?'contacted':'contact_reset'):
                 (updates.visitNote!==undefined && updates.visitNote!==s.visitNote)||(updates.notes!==undefined && updates.notes!==s.notes)?'note':null;
             return type?recordEvent(merged,type):merged;
         };

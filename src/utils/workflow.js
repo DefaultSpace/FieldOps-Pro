@@ -3,7 +3,7 @@ export function dayKey(value = Date.now()) {
     const date = new Date(value);
     return Number.isFinite(date.getTime()) ? new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Istanbul', year:'numeric',month:'2-digit',day:'2-digit' }).format(date) : 'Tarihsiz';
 }
-export const statusLabel = status => ({pending:'Bekliyor',postponed:'Ertelendi',waiting_parts:'Parça bekleniyor',done:'Tamamlandı',cancelled:'İptal edildi'}[status] || 'Bekliyor');
+export const statusLabel = status => ({pending:'Bekliyor',postponed:'Ertelendi',waiting_parts:'Bekliyor',done:'Tamamlandı',cancelled:'İptal edildi'}[status] || 'Bekliyor');
 export const isOpen = service => ['pending','postponed','waiting_parts'].includes(service.status);
 export function uniqueRecords(records) {
     const seen = new Set();
