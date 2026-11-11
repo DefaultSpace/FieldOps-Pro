@@ -19,6 +19,6 @@ function offlineBundle() {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    base: process.env.SITE_DEPLOY === '1' ? '/' : '/FieldOps-Pro/',
+    base: process.env.MINI_ANDROID === '1' ? '/assets/web/' : process.env.SITE_DEPLOY === '1' ? '/' : '/FieldOps-Pro/',
     plugins: [react(),offlineBundle()]
 })

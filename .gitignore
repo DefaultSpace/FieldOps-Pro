@@ -2,3 +2,10 @@ node_modules/
 dist/
 .openai/*.zip
 test-artifacts/
+dist-mini/
+android-mini/.gradle/
+android-mini/**/build/
+android-mini/local.properties
+android-mini/phone/src/main/assets/web/
+*.jks
+*.keystore

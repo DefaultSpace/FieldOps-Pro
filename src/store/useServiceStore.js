@@ -9,10 +9,13 @@ import { closeDay, completeRecords, dayKey, uniqueRecords } from '../utils/workf
 import { mergeBackup } from '../utils/backup'
 import { recordEvent, reopenRecord } from '../utils/history'
 import { saveCheckpoint } from '../utils/storage'
+import { operationPatch } from '../mini/protocol.js'
 export { normalizePhone } from '../utils/contacts'
 const generateUUID = () => globalThis.crypto?.randomUUID?.() || `field-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 export const useServiceStore = create(persist((set,get) => ({
     technicianName:'',region:'',services:[],archive:[],activity:[],lastImport:null,lastDeleted:null,lastBackupAt:null,
+    miniSync:null,
+    applyMiniOperation:(op,expected)=>set(state=>operationPatch(state,op,expected)),
     saveProfile:(technicianName,region)=>set({technicianName:technicianName.trim(),region}),
     importServices:records=> {
         const state=get(); saveCheckpoint(state);
@@ -68,8 +71,9 @@ export const useServiceStore = create(persist((set,get) => ({
     },
     exportData:()=>{
         const state=get(),now=Date.now();
+        if(globalThis.window?.FieldOpsMini){window.FieldOpsMini.postMessage(JSON.stringify({type:'export',data:JSON.stringify({version:3,exportedAt:now,s:state.services,a:state.archive,activity:state.activity})}));set({lastBackupAt:now});return;}
         const blob=new Blob([JSON.stringify({version:3,exportedAt:now,s:state.services,a:state.archive,activity:state.activity})],{type:'application/json'});
         const url=URL.createObjectURL(blob),link=document.createElement('a');
         link.href=url;link.download=`fieldops-${dayKey(now)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);set({lastBackupAt:now});
     },
-}),{name:'routex-persist-v1',version:1,migrate:state=>fieldState(state),merge:(saved,current)=>({...current,...fieldState(saved||{})}),storage:createJSONStorage(()=>safeStorage),partialize:state=>({technicianName:state.technicianName,region:state.region,services:state.services.map(fieldRecord),archive:state.archive.map(fieldRecord),activity:state.activity,lastImport:state.lastImport,lastBackupAt:state.lastBackupAt})}));
+}),{name:'routex-persist-v1',version:1,migrate:state=>fieldState(state),merge:(saved,current)=>({...current,...fieldState(saved||{})}),storage:createJSONStorage(()=>safeStorage),partialize:state=>({technicianName:state.technicianName,region:state.region,services:state.services.map(fieldRecord),archive:state.archive.map(fieldRecord),activity:state.activity,lastImport:state.lastImport,lastBackupAt:state.lastBackupAt,...(state.miniSync?{miniSync:state.miniSync}:{})})}));
