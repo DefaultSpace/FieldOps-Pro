@@ -59,10 +59,8 @@ public final class MainActivity extends Activity {
             } else {
                 if(records.length()==0)text("Günlük listede fiş yok",18,Color.WHITE);
                 for(int i=0;i<records.length();i++){
-                    JSONObject row=records.getJSONObject(i);String id=row.getString("id");JSONObject p=pending(id),n=notice(id);
-                    String status=p!=null?label(p.optString("status"))+" · Bekliyor":label(row.optString("status"));
-                    if(n!=null&&!n.optString("result").equals("applied"))status="İşlem uygulanmadı · Kontrol et";
-                    button(row.optString("timeSlot","Saat yok")+"\n"+row.getString("name")+"\nFiş "+row.getString("receiptNo")+" · "+status,()->{selected=id;rendered="";scroll=null;reload();},true);
+                    JSONObject row=records.getJSONObject(i);String id=row.getString("id");
+                    button(row.optString("timeSlot","Saat yok")+"\n"+row.getString("name")+"\nFiş "+row.getString("receiptNo")+"\n"+ShortAddress.format(row.optString("address")),()->{selected=id;rendered="";scroll=null;reload();},true);
                 }
                 JSONObject notes=Protocol.object(state,"notices");int rejected=0;for(Iterator<String> it=notes.keys();it.hasNext();)if(!notes.getJSONObject(it.next()).optString("result").equals("applied"))rejected++;
                 if(rejected>0){text(rejected+" işlem uygulanmadı. Güncel telefon kaydı korundu; silinen/arşivlenen fişleri telefonda kontrol et.",13,Color.YELLOW);button("Bildirimi okudum",()->{try{new Vault(this).change(s->s.put("notices",new JSONObject()));rendered="";reload();}catch(Exception e){error();}},true);}
