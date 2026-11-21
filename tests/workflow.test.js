@@ -43,9 +43,9 @@ test('two phone numbers, local copy format, safe message links and no invented E
  assert.equal(whatsappUrl('','test'),'');assert.ok(whatsappUrl('05550000000','A & B').includes('A%20%26%20B'));
  const templates=messageTemplates({timeSlot:'Saatsiz'},'Veysel');assert.ok(templates.every(t=>t.text.includes('Veysel')));assert.ok(templates.every(t=>!t.text.includes('Saatsiz')&&!t.text.includes('30 dakika')));
 });
-test('parser warns but retains unknown neighborhood; preserves district and minute slots',()=>{
+test('parser skips unknown neighborhood; preserves source date and appointment helpers',()=>{
  const text='Tarih\n13.10.2026\n123456789\n10:30 - 12:30\nÖrnek\nBosch | Buzdolabı\nÖrnek sok no 2 YENİ MAH-ESENYURT+(555) 000-0000\nYeni\nGH\nOnarım';
- const result=parseEcom(text);assert.equal(result.records.length,1);assert.equal(result.sourceDate,'2026-10-13');assert.equal(result.records[0].district,'ESENYURT');assert.equal(groupVisits(result.records)[0].district,'ESENYURT');assert.ok(result.warnings.length);assert.equal(result.records[0].timeSlot,'10:30/12:30');
+ const result=parseEcom(text);assert.equal(result.records.length,0);assert.equal(result.sourceDate,'2026-10-13');assert.equal(result.ignored[0].district,'ESENYURT');assert.equal(result.ignored[0].ignored,true);assert.equal(result.warnings.length,0);
  assert.equal(earliestSlot([{timeSlot:'11/13'},{timeSlot:'10:30/12:30'}]),'10:30/12:30');
  assert.equal(appointmentState('10:30/12:30',new Date('2026-10-13T07:15:00Z')),'upcoming');
  assert.ok(decodeURIComponent(getMapsSearchUrl('Örnek sok','Yeni',null,'Esenyurt')).includes('Örnek sok'));

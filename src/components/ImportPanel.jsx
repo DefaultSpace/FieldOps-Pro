@@ -16,7 +16,7 @@ export function ImportPanel({onClose,onImported}) {
         <label>eCom ekranındaki toplam fiş sayısı (isteğe bağlı)<input type="number" min="1" step="1" value={expected} onChange={e=>{setExpected(e.target.value);setAck(false);}}/></label>
         <small>Yalnızca yapıştırılan metin denetlenebilir. Eksik kopyalamayı yakalamak için eCom ekranındaki sayıyı gir.</small>
         {parsed.sourceDate&&<p className={oldDate?'date-warning':''}>Liste tarihi: {parsed.sourceDate}{oldDate?' · Bugünün listesi değil.':''}</p>}
-        <div className="import-summary"><strong>{parsed.sourceReceiptCount} fiş adayı</strong><span>{parsed.records.length} okunabilen · {parsed.rejectedReceiptCount} atlanan · {groupVisits(parsed.records).length} ziyaret</span></div>
+        <div className="import-summary"><strong>{parsed.sourceReceiptCount} fiş adayı</strong><span>{parsed.records.length} okunabilen · {parsed.rejectedReceiptCount} hatalı · {parsed.ignoredReceiptCount} bölge dışı atlanan · {groupVisits(parsed.records).length} ziyaret</span></div>
         <p>{review.added} yeni · {review.updated} güncellenecek · {review.restored} arşivden dönecek</p>
         {review.mismatch&&<p role="alert" className="date-warning">eCom toplamı ile metindeki fiş adayı sayısı uyuşmuyor.</p>}
         {review.conflicts.map(c=><p key={c.receiptNo}>Fiş {c.receiptNo}: elle seçilen {c.local} korunacak; eCom saati {c.source}.</p>)}

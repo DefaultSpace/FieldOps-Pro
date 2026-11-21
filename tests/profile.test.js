@@ -28,11 +28,11 @@ test('Region neighborhoods use correct navigation district with uppercase import
     assert.equal(formatMahalle('DENİZKÖŞKLER'), 'Denizköşkler');
     assert.equal(formatMahalle('MERKEZ'), 'Merkez');
 });
-test('Joined Başakşehir clipboard addresses are parsed without losing neighborhood or phone', () => {
+test('Joined Başakşehir clipboard addresses are silently ignored', () => {
     const text = '159000001\nSaatsiz\nMüşteri\nBosch | Buzdolabı\nÖrnek sokak no:1 ALTINŞEHİR MAH-BAŞAKŞEHİR+(555) 000-0000\nYeni\nGD\nMontaj';
     const result = parseEcom(text);
-    assert.equal(result.records.length,1);
-    assert.equal(result.records[0].mahalle,'ALTINŞEHİR');
-    assert.equal(result.records[0].phone,'905550000000');
+    assert.equal(result.records.length,0);
+    assert.equal(result.ignored[0].ignored,true);
+    assert.equal(result.warnings.length,0);
 });
 

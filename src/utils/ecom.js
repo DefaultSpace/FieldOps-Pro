@@ -1,16 +1,20 @@
+import { REGION } from '../config/region.js'
 import { fieldRecord } from './fieldRecords.js'
 import { recordEvent, reopenRecord } from './history.js'
 import { districtFor } from './maps.js'
 import { normalizePhone } from './contacts.js'
 import { formatMahalle } from './profile.js'
 export const normalizeKey = value => String(value || '').normalize('NFKC').toLocaleLowerCase('tr-TR').replace(/\s+/g, ' ').trim();
+const regionKey = value => normalizeKey(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i').replace(/\s/g, '');
+const AVCILAR_MAHALLELERI = new Set(REGION.neighborhoods.map(regionKey));
+const neighborhoodPattern = new RegExp(`(?:${REGION.neighborhoods.map(name => [...name.toLocaleUpperCase('tr-TR')].map(char => ({ ' ': '\\s*', 'İ': '[Iİıi]', 'I': '[Iİıi]', 'Ü': '[ÜUüu]', 'Ö': '[ÖOöo]', 'Ş': '[ŞSşs]', 'Ç': '[ÇCçc]', 'Ğ': '[ĞGğg]' })[char] || char).join('')).join('|')})\\s*$`, 'i');
 export function parseEcom(text) {
     const lines = text.replace(/\r/g, '').split('\n').map(l => l.replace(/^[\s\u200B\uFEFF]+|[\s\u200B\uFEFF]+$/g, '').replace(/^[-•*▪●]\s*/, '')).filter(Boolean);
     // Receipt candidates are counted independently of a valid appointment line.
     // A standalone phone or material code is shown for review rather than silently ignored.
     const starts = lines.flatMap((l, i) => /^\d{7,12}$/.test(l) ? [i] : []);
     const records = [], warnings = [];
-    const rejected = [];
+    const rejected = [], ignored = [];
     const seen = new Set();
     starts.forEach((start, index) => {
         const block = lines.slice(start, starts[index + 1] ?? lines.length);
@@ -29,7 +33,7 @@ export function parseEcom(text) {
             // Some mobile clipboards join street, neighborhood and phones without spaces.
             const marker = line.match(/MAH(?:ALLESİ)?\s*[-–]\s*(?:AVC[Iİ]LAR|BAŞAKŞEH[Iİ]R|ESENYURT)\s*\+?/i);
             const prefix = marker ? line.slice(0, marker.index).trim() : '';
-            const known = prefix.match(/(?:ALT[Iİ]NŞEH[Iİ]R|GÜVERC[Iİ]NTEPE|ŞAH[Iİ]NTEPE|MUSTAFA\s*KEMAL\s*PAŞA|DENİZKÖŞKLER|GÜMÜŞPALA|ÜNİVERSİTE|FİRUZKÖY|TAHTAKALE|YEŞİLKENT|CİHANGİR|AMBARLI|MERKEZ)\s*$/i);
+            const known = prefix.match(neighborhoodPattern);
             if (marker && known) {
                 const streetPart = prefix.slice(0,known.index).trim();
                 const address = [...payload.slice(0,neighborhoodIndex),streetPart].filter(Boolean).join(' ');
@@ -43,31 +47,36 @@ export function parseEcom(text) {
         const receiptNo = block[0];
         if (!fields.length && content[0] && content[1]?.includes('|') && payload.length) {
             fields = [content[0], content[1], payload.join(' ').replace(/(?:\+?90\s*)?\(?0?\d{3}\)?[\s-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}/g, '').trim(), '', payload.join(' ')];
-            warnings.push(`${receiptNo}: Mahalle ayrılamadı; adresi kontrol et. Fiş aktarılacak.`);
         }
         if (fields.length < 4 || !fields[1]?.includes('|') || !fields[2]) { reject('Eksik kayıt; aktarılmadı.'); return; }
+        const mahalle = fields[3].replace(/\s*MAH(?:ALLESİ)?\s*[-–].*$/i, '').trim();
+        const district = fields[3].match(/[-–]\s*([^+]+)/)?.[1]?.trim() || payload.join(' ').match(/MAH(?:ALLESİ)?\s*[-–]\s*([^+]+)/i)?.[1]?.trim() || '';
+        if (!AVCILAR_MAHALLELERI.has(regionKey(mahalle)) || (district && regionKey(district) !== regionKey(REGION.name))) {
+            ignored.push({ receiptNo, mahalle, district, ignored: true, raw: block.join('\n') });
+            return;
+        }
         if (seen.has(receiptNo)) { reject('Tekrarlanan fiş atlandı.'); return; }
         seen.add(receiptNo);
         const phoneMatches = (fields[4] || '').match(/(?:\+?90\s*)?\(?0?\d{3}\)?[\s-]*\d{3}[\s-]*\d{2}[\s-]*\d{2}/g) || [];
         const phones = [...new Set(phoneMatches.map(normalizePhone).filter(Boolean))];
         if (!phones.length) warnings.push(`${receiptNo}: Telefon bulunamadı; fiş yine de aktarılacak.`);
-        const mahalle = fields[3].replace(/\s*MAH(?:ALLESİ)?\s*[-–].*$/i, '').trim();
         const match = block[1].match(/(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})/);
         const timeSlot = match ? `${Number(match[1])}${match[2]==='00'?'':':'+match[2]}/${Number(match[3])}${match[4]==='00'?'':':'+match[4]}` : 'Saatsiz';
         const flags = flagStart >= 0 ? content.slice(flagStart) : [];
-        records.push({ receiptNo, name: fields[0], device: fields[1], address: fields[2], mahalle, district: fields[3].match(/[-–]\s*([^+]+)/)?.[1]?.trim() || payload.join(' ').match(/MAH(?:ALLESİ)?\s*[-–]\s*([^+]+)/i)?.[1]?.trim() || '', phone: phones[0] || '', phones, timeSlot, warranty: flags[1] || '', jobType: flags[2] || '', addressWarning: !/\bno\s*[:.]?\s*\d/i.test(fields[2]) || !mahalle });
+        records.push({ receiptNo, name: fields[0], device: fields[1], address: fields[2], mahalle, district, phone: phones[0] || '', phones, timeSlot, warranty: flags[1] || '', jobType: flags[2] || '', addressWarning: !/\bno\s*[:.]?\s*\d/i.test(fields[2]) || !mahalle });
     });
     // Count every recognizable receipt block, including ones that could not be parsed.
     const sourceReceiptCount = starts.length;
-    const rejectedReceiptCount = sourceReceiptCount - records.length;
+    const rejectedReceiptCount = rejected.length;
     if (!starts.length) warnings.push('Fiş bulunamadı. eCom listesinin tamamını yapıştırın.');
     const date = text.match(/Tarih\s*\n\s*(\d{2})\.(\d{2})\.(\d{4})/);
     const sourceDate = date ? `${date[3]}-${date[2]}-${date[1]}` : '';
-    return { records, warnings, rejected, sourceDate, sourceReceiptCount, rejectedReceiptCount };
+    return { records, warnings, rejected, ignored, ignoredReceiptCount: ignored.length, sourceDate, sourceReceiptCount, rejectedReceiptCount };
 }
 export function mergeImported(services, archive, records, createId, now = Date.now(), isExtra = false) {
     const result = [...services];
     for (const record of records) {
+        if (record.ignored) continue;
         const index = result.findIndex(s => s.receiptNo === record.receiptNo);
         if (index >= 0) {
             const previous=result[index];
@@ -85,12 +94,12 @@ export function mergeImported(services, archive, records, createId, now = Date.n
     return result.map(fieldRecord);
 }
 export function importWithArchive(services, archive, records, createId, now = Date.now(), isExtra = false) {
-    const receipts = new Set(records.map(record => record.receiptNo));
+    const receipts = new Set(records.filter(record => !record.ignored).map(record => record.receiptNo));
     return { services: mergeImported(services, archive, records, createId, now, isExtra), archive: archive.filter(s => !receipts.has(s.receiptNo)) };
 }
 export function importSummary(services, archive, records) {
     const result={added:0,updated:0,restored:0};
-    for(const receipt of new Set(records.map(s=>s.receiptNo))) {
+    for(const receipt of new Set(records.filter(s=>!s.ignored).map(s=>s.receiptNo))) {
         if(services.some(s=>s.receiptNo===receipt)) result.updated++;
         else if(archive.some(s=>s.receiptNo===receipt)) result.restored++;
         else result.added++;

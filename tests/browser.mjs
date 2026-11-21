@@ -17,6 +17,10 @@ try {
     assert.equal(await page.getByRole('button',{name:'Güncelle ve yeniden aç'}).count(),0);
     const block=(id,name,slot)=>`${id}\n${slot}\n${name}\nBosch | Çamaşır Makinesi\nBaşaran sok no12 d4\nGÜMÜŞPALA MAH-AVCILAR+\n(555) 000-0000\nYeni\nGD\nOnarım`;
     await page.getByRole('button',{name:'eCom listesini aktar',exact:true}).click();
+    await page.getByLabel('eCom servis listesi').fill([block('159000001','ÖRNEK MÜŞTERİ','10:00 - 12:00'),block('159000099','BÖLGE DIŞI','12:00 - 14:00').replace('GÜMÜŞPALA MAH-AVCILAR','MERKEZ MAH-ESENYURT')].join('\n'));
+    await page.getByText('1 okunabilen · 0 hatalı · 1 bölge dışı atlanan · 1 ziyaret',{exact:true}).waitFor();
+    assert.equal(await page.getByRole('button',{name:'Listeyi aktar',exact:true}).isEnabled(),true);
+    assert.equal(await page.getByLabel('Uyarıları inceledim',{exact:false}).count(),0);
     await page.getByLabel('eCom servis listesi').fill([block('159000001','ÖRNEK MÜŞTERİ','10:00 - 12:00'),block('159000002','İKİNCİ MÜŞTERİ','12:00 - 14:00'),'159000003\nBozuk saat\nEksik'].join('\n'));
     await page.getByLabel('eCom ekranındaki toplam').fill('3');
     assert.equal(await page.getByRole('button',{name:'Listeyi aktar',exact:true}).isDisabled(),true);

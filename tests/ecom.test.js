@@ -1,6 +1,7 @@
+import { REGION } from '../src/config/region.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseEcom, mergeImported, groupVisits, earliestSlot, appointmentState } from '../src/utils/ecom.js';
+import { parseEcom, mergeImported, importWithArchive, importSummary, groupVisits, earliestSlot, appointmentState } from '../src/utils/ecom.js';
 import { navigationAddress, getMapsSearchUrl, validCoordinates } from '../src/utils/maps.js';
 const block = (id, slot = 'Saatsiz', device = 'Bosch | Bulaşık Makinesi', name = 'ÖRNEK MÜŞTERİ') => `${id}\n${slot}\n- ${name}\n- ${device}\n- Örnek sok. no:34 d:5 k:2 Site A blok\n- AMBARLI MAH-AVCILAR+\n- (555) 000-0000/(555) 000-0001\n* Yeni\n* GD\n* Onarım`;
 test('Reads multi-ticket visits, slots, model-free devices and incomplete final flags', () => {
@@ -74,3 +75,34 @@ test('Mobile clipboard joins address, neighborhood and phone into one line', () 
  assert.deepEqual(parseEcom(split).records,r.records);
 });
 
+
+test('All ten Avcılar neighborhoods are accepted, including compact and ASCII spelling', () => {
+ assert.equal(REGION.neighborhoods.length,10);
+ for (const neighborhood of [...REGION.neighborhoods, 'MUSTAFAKEMALPAŞA', 'GUMUSPALA']) {
+  const parsed=parseEcom(block('159000001').replace('AMBARLI',neighborhood));
+  assert.equal(parsed.records.length,1,neighborhood);
+  assert.equal(parsed.ignoredReceiptCount,0);
+ }
+});
+test('Outside and unknown neighborhoods are silently skipped with balanced counts', () => {
+ const outside=block('159000002').replace('AMBARLI MAH-AVCILAR','MERKEZ MAH-ESENYURT');
+ const unknown=block('159000003').replace('AMBARLI','BİLİNMEYEN');
+ const missing=block('159000004').replace('- AMBARLI MAH-AVCILAR+\n','');
+ const parsed=parseEcom([block('159000001'),outside,unknown,missing].join('\n'));
+ assert.equal(parsed.records.length,1);
+ assert.equal(parsed.ignoredReceiptCount,3);
+ assert.ok(parsed.ignored.every(record=>record.ignored));
+ assert.deepEqual(parsed.warnings,[]);
+ assert.equal(parsed.rejectedReceiptCount,0);
+ assert.equal(parsed.sourceReceiptCount,parsed.records.length+parsed.rejectedReceiptCount+parsed.ignoredReceiptCount);
+});
+test('Ignored receipts cannot update active records or remove archive entries', () => {
+ const active={id:'active',receiptNo:'159000001',name:'Keep',status:'pending',notes:'Keep note'};
+ const archived={id:'archive',receiptNo:'159000002',status:'done',notes:'Keep archive'};
+ const ignored=[{receiptNo:active.receiptNo,ignored:true},{receiptNo:archived.receiptNo,ignored:true}];
+ const result=importWithArchive([active],[archived],ignored,()=>{throw new Error('Must not create a record');});
+ assert.equal(result.services.length,1);
+ assert.equal(result.services[0].notes,'Keep note');
+ assert.deepEqual(result.archive,[archived]);
+ assert.deepEqual(importSummary([active],[archived],ignored),{added:0,updated:0,restored:0});
+});
