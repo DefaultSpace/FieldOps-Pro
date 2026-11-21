@@ -1,6 +1,6 @@
 # FieldOps Pro
 
-Saha teknisyenleri için eCom listesinden çalışan günlük iş takip yardımcısı. eCom; resmi fiş, fotoğraf, imza ve stok işlemlerinin yapıldığı sistem olmaya devam eder.
+Tek kişinin Avcılar / İstanbul saha işlerinde kullandığı, eCom listesinden çalışan kişisel günlük iş takip aracı. eCom; resmi fiş, fotoğraf, imza ve stok işlemlerinin yapıldığı sistem olmaya devam eder.
 
 ## Kullanım
 
@@ -59,7 +59,7 @@ GitHub Pages paketi: `npm run build` (`/FieldOps-Pro/`). Sites kök alan adı: `
 
 Tarayıcı testi yalnızca sentetik müşteri kayıtları kullanır; aktarım, saha işlemleri, çevrimdışı yeniden açılış, geçmiş, kurtarma ve cihazlar arası yedek aktarımını denetler. Ekran görüntüleri ve test yedeği `test-artifacts/` altında, Git dışında kalır. Yerel Chrome için `FIELDOPS_CHROME` ile çalıştırılabilir. PR kontrolü lint, birim testleri, üretim derlemesi ve Chromium senaryosunu çalıştırır.
 
-[13 Ekim 2026 saha inceleme ve değişiklik raporu](docs/SAHA-INCELEME-2026-10-13.md)
+[13 Ekim 2026 saha teknik notları](docs/SAHA-INCELEME-2026-10-13.md)
 
 [Güncel saha düzenlemesi](docs/SAHA-DUZENLEME-2026-10-13.md)
 

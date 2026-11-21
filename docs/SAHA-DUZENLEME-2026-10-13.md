@@ -1,6 +1,6 @@
 # Saha düzenlemesi — 13 Ekim 2026
 
-Bu rapor önceki incelemenin prim ve harita kararlarının yerine geçer.
+Bu teknik not önceki incelemenin prim ve harita kararlarının yerine geçer.
 
 | Konu | Yeni davranış |
 |---|---|
