@@ -24,7 +24,7 @@ Aktarım, silme, arşivleme ve yedek birleştirmeden önce son durum `fieldops-c
 
 eCom aktarımı arşivde bulunan fişi bekleyen olarak geri açar; notlar, önceki tamamlanma zamanı ve işlem geçmişi korunur. Aktif fişin mevcut durumu korunur. Elle seçilen randevu saatini yeni aktarım değiştirmez; kaynak saat ayrıca tutulur ve “eCom saatine dön” ile seçilebilir. Kaynak listede olmayan işler kendiliğinden silinmez.
 
-eCom aktarımı yalnızca Avcılar’ın on mahallesini kabul eder. Bölge dışı veya mahallesi belirlenemeyen kayıtlar `ignored: true` olarak ayrılır; uyarı onayı gerektirmeden atlanır ve adetleri önizlemede gösterilir. Aynı mahalle adı başka bir ilçede geçiyorsa aktarılmaz. Mevcut yerel kayıtlar bu filtreyle silinmez.
+eCom aktarımı yalnızca Avcılar’daki Gümüşpala, Denizköşkler, Merkez, Ambarlı ve Cihangir mahallelerini kabul eder. Bölge dışı veya mahallesi belirlenemeyen kayıtlar `ignored: true` olarak ayrılır; uyarı onayı gerektirmeden atlanır ve adetleri önizlemede gösterilir. Aynı mahalle adı başka bir ilçede geçiyorsa aktarılmaz. Mevcut yerel kayıtlar bu filtreyle silinmez.
 
 ## Saha V2
 

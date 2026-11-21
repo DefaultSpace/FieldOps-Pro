@@ -63,22 +63,22 @@ test('Accepts browser bullet markers and en dash time separators', () => {
 });
 
 test('Mobile clipboard joins address, neighborhood and phone into one line', () => {
- const text = `159000011\n16:00 - 18:00\nÖRNEK KİŞİ\nBosch | Bulaşık Makinesi\nKARADUT SK N110 D10MUSTAFAKEMALPAŞA MAH-AVCILAR+(555) 000-0000/(555) 000-0001\nYeni\nGaranti Belirsiz\nMontaj`;
+ const text = `159000011\n16:00 - 18:00\nÖRNEK KİŞİ\nBosch | Bulaşık Makinesi\nKARADUT SK N110 D10GÜMÜŞPALA MAH-AVCILAR+(555) 000-0000/(555) 000-0001\nYeni\nGaranti Belirsiz\nMontaj`;
  const r = parseEcom(text);
  assert.equal(r.records.length,1); assert.equal(r.warnings.length,0);
  assert.equal(r.records[0].address,'KARADUT SK N110 D10');
- assert.equal(r.records[0].mahalle,'MUSTAFAKEMALPAŞA');
+ assert.equal(r.records[0].mahalle,'GÜMÜŞPALA');
  assert.equal(r.records[0].phones.length,2); assert.equal(r.records[0].jobType,'Montaj');
  assert.equal(r.records[0].timeSlot,'16/18');
  // Visual line wrapping without actual newlines is already covered above.
- const split=text.replace('KARADUT SK N110 D10MUSTAFAKEMALPAŞA','KARADUT SK N110 D10\nMUSTAFAKEMALPAŞA');
+ const split=text.replace('KARADUT SK N110 D10GÜMÜŞPALA','KARADUT SK N110 D10\nGÜMÜŞPALA');
  assert.deepEqual(parseEcom(split).records,r.records);
 });
 
 
-test('All ten Avcılar neighborhoods are accepted, including compact and ASCII spelling', () => {
- assert.equal(REGION.neighborhoods.length,10);
- for (const neighborhood of [...REGION.neighborhoods, 'MUSTAFAKEMALPAŞA', 'GUMUSPALA']) {
+test('Only the five selected Avcılar neighborhoods are accepted, including ASCII spelling', () => {
+ assert.deepEqual(REGION.neighborhoods,['Gümüşpala','Denizköşkler','Merkez','Ambarlı','Cihangir']);
+ for (const neighborhood of [...REGION.neighborhoods, 'GÜMÜŞPALA', 'GUMUSPALA']) {
   const parsed=parseEcom(block('159000001').replace('AMBARLI',neighborhood));
   assert.equal(parsed.records.length,1,neighborhood);
   assert.equal(parsed.ignoredReceiptCount,0);
@@ -105,4 +105,14 @@ test('Ignored receipts cannot update active records or remove archive entries', 
  assert.equal(result.services[0].notes,'Keep note');
  assert.deepEqual(result.archive,[archived]);
  assert.deepEqual(importSummary([active],[archived],ignored),{added:0,updated:0,restored:0});
+});
+
+test('Other Avcılar neighborhoods are silently ignored', () => {
+ for (const neighborhood of ['Firuzköy','Mustafa Kemal Paşa','MUSTAFAKEMALPAŞA','Tahtakale','Üniversite','Yeşilkent']) {
+  const parsed=parseEcom(block('159000001').replace('AMBARLI',neighborhood));
+  assert.equal(parsed.records.length,0,neighborhood);
+  assert.equal(parsed.ignoredReceiptCount,1,neighborhood);
+  assert.equal(parsed.ignored[0].ignored,true);
+  assert.deepEqual(parsed.warnings,[]);
+ }
 });
