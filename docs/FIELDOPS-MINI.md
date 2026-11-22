@@ -109,3 +109,5 @@ Fiziksel cihaz eşleşmesi ve BLE teslimi bu ortamda doğrulanmadı. WebView iç
 Telefon APK sürümü 0.2.0 (versionCode 2). Beş mahalle, kişisel isim ayarı, sade günlük ekran ve kurtarma uyarıları güncel web koduyla birleştirildi. Mevcut saat köprüsü ve protokolü korunur; bu değişiklik için saat APK’sını yenilemek gerekmez.
 
 Telefon uygulaması paketlenmiş ekranları kullanır; GitHub Pages yayını onu otomatik güncellemez. Android sürümü uygulamadaki durum satırında görünür. Güncelleme aynı paket kimliği ve imzayla mevcut APK’nın üzerine kurulmalıdır; uygulama kaldırılmamalı veya verileri temizlenmemelidir. Kurulum öncesinde v3 JSON yedeği alınır, kurulum sonrasında aktif/arşiv kayıtları ve geçmiş karşılaştırılır.
+
+Doğrulama: 64 JavaScript testi ve 8 Android/JVM testi geçti; web tarayıcı, yerel köprü ve paketlenmiş Android varlık testleri başarılı. Telefon APK derlemesi ve Android lint tamamlandı. S25 Ultra üzerinde 0.1.0 → 0.2.0 yerinde güncelleme yapıldı; imza eşleşmesi ve kayıt/geçmiş/saat işlem makbuzlarının değişmediği karşılaştırıldı. Saat APK’sı değiştirilmedi.

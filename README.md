@@ -1,6 +1,6 @@
 # FieldOps Pro
 
-Avcılar / İstanbul’da kendi günlük saha işlerimi takip etmek için kullandığım kişisel araç. Tek kişi ve tek cihazdaki tarayıcı için tasarlanmıştır. Kullanıcı hesabı, backend, otomatik cihaz eşitlemesi veya eCom entegrasyonu yoktur.
+Avcılar / İstanbul’da kendi günlük saha işlerimi takip etmek için kullandığım kişisel araç. Tek kişinin günlük kullanımı için tasarlanmıştır. Kullanıcı hesabı, backend veya eCom entegrasyonu yoktur. Tarayıcı ve telefondaki Android uygulaması ayrı yerel depolar kullanır. Android sürümünde mevcut kişisel Galaxy Watch bağlantısı korunur; tarayıcı ile telefon arasında otomatik veri eşitlemesi yoktur.
 
 Çalışma alanı: **Gümüşpala, Denizköşkler, Merkez, Ambarlı ve Cihangir**. Bölge seçilmez; mahalle listesi `src/config/region.js` içinde tutulur.
 
@@ -57,3 +57,11 @@ GitHub Pages paketi `/FieldOps-Pro/` yolunu kullanır. Kök alan adı için `SIT
 Tarayıcı testleri sentetik kayıtlarla aktarım, elle kayıt, kişisel ayarlar, çevrimdışı yeniden açılış/not düzenleme, güncelleme, yedekleme ve kurtarmayı denetler. Test dosyaları `test-artifacts/` altında Git dışında kalır. `legacy/UZERINE_TIKLA_CALISTIR.html` eski bağımsız sürümdür; güncel üretim paketine alınmaz.
 
 [İlk teknik notlar](docs/SAHA-INCELEME-2026-10-13.md) · [Güncel kişisel kullanım notları](docs/SAHA-DUZENLEME-2026-10-13.md)
+
+## Telefonda kurulu FieldOps Pro
+
+Android uygulamasının kaynakları `android-mini/` altındadır. Sürüm 0.2.0, güncel kişisel kullanım ekranlarını APK içinde taşır; GitHub Pages yayını telefondaki APK’yı otomatik güncellemez. Sürüm bilgisi uygulamanın durum satırında görünür.
+
+APK güncellemesi için önce JSON yedeği alınır. `npm run build:mini` ile ekranlar paketlenir, ardından aynı imzalama anahtarı ve `com.fieldops.mini` kimliğiyle yeni APK üretilip mevcut uygulamanın üzerine kurulur. Uygulama kaldırılmaz veya verileri temizlenmez. Özel imzalama anahtarları ve gerçek müşteri yedekleri Git’e eklenmez.
+
+[Android derleme ve kişisel saat bağlantısı](docs/FIELDOPS-MINI.md)
