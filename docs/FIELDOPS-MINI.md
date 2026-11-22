@@ -103,3 +103,9 @@ Fiziksel cihaz eşleşmesi ve BLE teslimi bu ortamda doğrulanmadı. WebView iç
 - [WebView yerel içerik yükleme](https://developer.android.com/develop/ui/views/layout/webapps/load-local-content)
 - [Köken sınırlı JavaScript köprüsü](https://developer.android.com/develop/ui/views/layout/webapps/native-api-access-jsbridge)
 - [Android Gradle Plugin 8.9 uyumluluğu](https://developer.android.com/build/releases/agp-8-9-0-release-notes)
+
+## Telefon güncellemesi — 22 Kasım 2026
+
+Telefon APK sürümü 0.2.0 (versionCode 2). Beş mahalle, kişisel isim ayarı, sade günlük ekran ve kurtarma uyarıları güncel web koduyla birleştirildi. Mevcut saat köprüsü ve protokolü korunur; bu değişiklik için saat APK’sını yenilemek gerekmez.
+
+Telefon uygulaması paketlenmiş ekranları kullanır; GitHub Pages yayını onu otomatik güncellemez. Android sürümü uygulamadaki durum satırında görünür. Güncelleme aynı paket kimliği ve imzayla mevcut APK’nın üzerine kurulmalıdır; uygulama kaldırılmamalı veya verileri temizlenmemelidir. Kurulum öncesinde v3 JSON yedeği alınır, kurulum sonrasında aktif/arşiv kayıtları ve geçmiş karşılaştırılır.
