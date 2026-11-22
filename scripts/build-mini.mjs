@@ -1,0 +1,18 @@
+import { build } from 'vite';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+process.env.MINI_ANDROID='1';
+const root=fileURLToPath(new URL('../',import.meta.url));
+process.chdir(root);
+await build({build:{outDir:'dist-mini'}});
+const index=new URL('../dist-mini/index.html',import.meta.url);
+const csp="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'";
+await writeFile(index,(await readFile(index,'utf8')).replace('<head>',`<head>\n    <meta http-equiv="Content-Security-Policy" content="${csp}">`));
+const target=new URL('../android-mini/phone/src/main/assets/web/',import.meta.url);
+if(!fileURLToPath(target).startsWith(root))throw new Error('Asset target must stay inside the repository.');
+await rm(target,{recursive:true,force:true});
+await mkdir(target,{recursive:true});
+await cp(new URL('../dist-mini/',import.meta.url),target,{recursive:true});
+const html=await readFile(new URL('index.html',target),'utf8');
+if(!html.includes('/assets/web/assets/'))throw new Error('Android asset base path was not applied.');
+console.log('Android web assets prepared.');

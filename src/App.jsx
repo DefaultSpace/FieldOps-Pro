@@ -1,4 +1,5 @@
 import { SystemStatus } from './components/SystemStatus'
+import { MiniStatus } from './components/MiniStatus'
 import { HashRouter as Router, Routes, Route } from 'react-router-dom'
 import { Header } from './components/Header'
 import { Home } from './pages/Home'
@@ -16,6 +17,7 @@ function App() {
                 <Profile />
                 <ReminderCenter />
                 <SystemStatus />
+                <MiniStatus />
                 <main className="flex-1">
                     <Routes>
                         <Route path="/" element={<Home />} />

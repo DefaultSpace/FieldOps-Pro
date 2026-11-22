@@ -1,0 +1,36 @@
+name: FieldOps Mini checks
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:mini-browser
+      - run: npm run build:mini
+      - run: npm run test:mini-browser
+        env:
+          FIELDOPS_MINI_ASSETS: '1'
+      - run: chmod +x gradlew && ./gradlew :shared:testDebugUnitTest :phone:assembleDebug :wear:assembleDebug :phone:lintDebug :wear:lintDebug
+        working-directory: android-mini
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fieldops-mini-debug-apks
+          path: android-mini/**/build/outputs/apk/debug/*.apk

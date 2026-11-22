@@ -2,6 +2,7 @@ let state={ready:false,waiting:null,error:false};
 const publish=updates=>{state={...state,...updates};window.dispatchEvent(new Event('fieldops-offline'));};
 export const offlineState=()=>state;
 export async function registerOffline() {
+    if(window.FieldOpsMini){publish({ready:true});return;}
     if(!import.meta.env.PROD || !('serviceWorker' in navigator))return;
     try{
         // Reuse the installed worker while offline; registration may require network.
