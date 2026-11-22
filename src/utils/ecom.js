@@ -1,12 +1,10 @@
-import { REGION } from '../config/region.js'
+import { REGION, isServiceArea } from '../config/region.js'
 import { fieldRecord } from './fieldRecords.js'
 import { recordEvent, reopenRecord } from './history.js'
 import { districtFor } from './maps.js'
 import { normalizePhone } from './contacts.js'
 import { formatMahalle } from './profile.js'
 export const normalizeKey = value => String(value || '').normalize('NFKC').toLocaleLowerCase('tr-TR').replace(/\s+/g, ' ').trim();
-const regionKey = value => normalizeKey(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/ı/g, 'i').replace(/\s/g, '');
-const AVCILAR_MAHALLELERI = new Set(REGION.neighborhoods.map(regionKey));
 const neighborhoodPattern = new RegExp(`(?:${REGION.neighborhoods.map(name => [...name.toLocaleUpperCase('tr-TR')].map(char => ({ ' ': '\\s*', 'İ': '[Iİıi]', 'I': '[Iİıi]', 'Ü': '[ÜUüu]', 'Ö': '[ÖOöo]', 'Ş': '[ŞSşs]', 'Ç': '[ÇCçc]', 'Ğ': '[ĞGğg]' })[char] || char).join('')).join('|')})\\s*$`, 'i');
 export function parseEcom(text) {
     const lines = text.replace(/\r/g, '').split('\n').map(l => l.replace(/^[\s\u200B\uFEFF]+|[\s\u200B\uFEFF]+$/g, '').replace(/^[-•*▪●]\s*/, '')).filter(Boolean);
@@ -51,7 +49,7 @@ export function parseEcom(text) {
         if (fields.length < 4 || !fields[1]?.includes('|') || !fields[2]) { reject('Eksik kayıt; aktarılmadı.'); return; }
         const mahalle = fields[3].replace(/\s*MAH(?:ALLESİ)?\s*[-–].*$/i, '').trim();
         const district = fields[3].match(/[-–]\s*([^+]+)/)?.[1]?.trim() || payload.join(' ').match(/MAH(?:ALLESİ)?\s*[-–]\s*([^+]+)/i)?.[1]?.trim() || '';
-        if (!AVCILAR_MAHALLELERI.has(regionKey(mahalle)) || (district && regionKey(district) !== regionKey(REGION.name))) {
+        if (!isServiceArea(mahalle, district)) {
             ignored.push({ receiptNo, mahalle, district, ignored: true, raw: block.join('\n') });
             return;
         }

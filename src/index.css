@@ -267,3 +267,9 @@ button:disabled { opacity:.45; cursor:not-allowed; } button:focus-visible,a:focu
  .large-field-view .compact-address {font-size:16px;}
 }
 
+
+.daily-entry-actions { display:flex; gap:10px; flex-shrink:0; }
+@media(max-width:600px) {
+ .compact-home .page-intro { flex-direction:column; align-items:stretch; }
+ .daily-entry-actions > button { flex:1; padding:12px; font-size:13px; }
+}

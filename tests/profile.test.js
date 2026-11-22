@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { completionDay, surveyMessage, REGIONS, formatMahalle } from '../src/utils/profile.js';
+import { completionDay, surveyMessage, formatMahalle } from '../src/utils/profile.js';
 import { districtFor } from '../src/utils/maps.js';
 import { parseEcom } from '../src/utils/ecom.js';
 
@@ -16,10 +16,7 @@ test('Completion groups by completion date in Istanbul, including midnight bound
     assert.equal(completionDay({createdAt:Date.parse('2026-10-10T10:00:00Z'),completedAt:Date.parse('2026-10-12T21:30:00Z')}), '2026-10-13');
     assert.equal(completionDay({createdAt:Date.parse('2026-10-10T10:00:00Z')}), '2026-10-10');
 });
-test('Region neighborhoods use correct navigation district with uppercase import values', () => {
-    assert.equal(REGIONS['Başakşehir'].length,3);
-    assert.equal(REGIONS['Parseller'].length,3);
-    assert.equal(REGIONS['Avcılar'].length,5);
+test('Legacy neighborhoods retain navigation district and formatting', () => {
     assert.equal(districtFor('ALTINŞEHİR'), 'Başakşehir');
     assert.equal(districtFor('AMBARLI'), 'Avcılar');
     assert.equal(formatMahalle('ALTINŞEHİR'), 'Altınşehir');

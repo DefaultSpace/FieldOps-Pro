@@ -1,3 +1,4 @@
+import { REGION, isServiceArea, serviceNeighborhood } from '../config/region'
 import { fieldRecord, fieldState } from '../utils/fieldRecords'
 import { safeStorage } from '../utils/storage'
 import { create } from 'zustand'
@@ -12,15 +13,20 @@ import { saveCheckpoint } from '../utils/storage'
 export { normalizePhone } from '../utils/contacts'
 const generateUUID = () => globalThis.crypto?.randomUUID?.() || `field-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 export const useServiceStore = create(persist((set,get) => ({
-    technicianName:'',region:'',services:[],archive:[],activity:[],lastImport:null,lastDeleted:null,lastBackupAt:null,
-    saveProfile:(technicianName,region)=>set({technicianName:technicianName.trim(),region}),
+    technicianName:'',region:REGION.name,services:[],archive:[],activity:[],lastImport:null,lastDeleted:null,lastBackupAt:null,
+    saveProfile:technicianName=>set({technicianName:technicianName.trim(),region:REGION.name}),
     importServices:records=> {
-        const state=get(); saveCheckpoint(state);
+        const state=get();
+        const accepted=records.filter(record=>!record.ignored && isServiceArea(record.mahalle,record.district));
+        const skipped=records.length-accepted.length;
+        if(!accepted.length)return {added:0,updated:0,restored:0,processed:0,missing:[],skipped,before:state.services.length,after:state.services.length};
+        records=accepted;
+        saveCheckpoint(state);
         const current=archiveFinishedDays(state.services,state.archive);
         const summary=importSummary(current.services,current.archive,records);
         const next=importWithArchive(current.services,current.archive,restoreKnownLocations(records,[...current.services,...current.archive]),generateUUID);
         const missing=records.filter(r=>!next.services.some(s=>s.receiptNo===r.receiptNo)).map(r=>r.receiptNo);
-        const report={...summary,at:Date.now(),before:state.services.length,after:next.services.length,processed:new Set(records.map(r=>r.receiptNo)).size,missing};
+        const report={...summary,skipped,at:Date.now(),before:state.services.length,after:next.services.length,processed:new Set(records.map(r=>r.receiptNo)).size,missing};
         set({...next,lastImport:report});
         return report;
     },
@@ -49,7 +55,10 @@ export const useServiceStore = create(persist((set,get) => ({
     addService:data=>{
         const state=get(), receiptNo=String(data.receiptNo||'').trim();
         if(receiptNo && [...state.services,...state.archive].some(s=>s.receiptNo===receiptNo)) return {error:'Bu fiş zaten kayıtlı. Fiş numarasıyla arayın veya eCom listesini yeniden aktarın.'};
-        const record=recordEvent({...data,receiptNo,id:generateUUID(),phone:normalizePhone(data.phone),createdAt:Date.now(),status:'pending'},'added');
+        if(!isServiceArea(data.mahalle,data.district))return {error:'Yalnızca Gümüşpala, Denizköşkler, Merkez, Ambarlı ve Cihangir için kayıt ekleyebilirsin.'};
+        if(!String(data.name||'').trim() || !String(data.address||'').trim())return {error:'Müşteri adı ve adres gerekli.'};
+        saveCheckpoint(state);
+        const record=recordEvent({...data,mahalle:serviceNeighborhood(data.mahalle),district:REGION.name,receiptNo,id:generateUUID(),phone:normalizePhone(data.phone),createdAt:Date.now(),status:'pending'},'added');
         set({services:[record,...state.services]});return {id:record.id};
     },
     updateService:(id,updates)=>set(state=>{

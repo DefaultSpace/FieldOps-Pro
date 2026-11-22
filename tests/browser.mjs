@@ -12,7 +12,7 @@ try {
     const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));page.on('dialog',dialog=>dialog.accept());
     page.setDefaultTimeout(10000);
     await page.goto(base);
-    await page.getByLabel('Teknisyen ismi').fill('Test Teknisyeni');await page.getByLabel('Hangi bölgeye çıkıyorsun?').selectOption('Avcılar');await page.getByRole('button',{name:'Kişiyi kaydet'}).click();
+    await page.getByLabel('Teknisyen ismi').fill('Test Teknisyeni');await page.getByRole('button',{name:'İsmi kaydet'}).click();
     await page.getByText('Çevrimdışı açılış hazır.',{exact:false}).waitFor();
     assert.equal(await page.getByRole('button',{name:'Güncelle ve yeniden aç'}).count(),0);
     const block=(id,name,slot)=>`${id}\n${slot}\n${name}\nBosch | Çamaşır Makinesi\nBaşaran sok no12 d4\nGÜMÜŞPALA MAH-AVCILAR+\n(555) 000-0000\nYeni\nGD\nOnarım`;
@@ -58,7 +58,7 @@ try {
     state=await reopened.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state);assert.equal(state.services.length,2);
     assert.ok(await reopened.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     const downloadPromise=reopened.waitForEvent('download');await reopened.getByRole('button',{name:'Yedek indir',exact:true}).click();const download=await downloadPromise;await download.saveAs('test-artifacts/backup.json');
-    const fresh=await browser.newContext({viewport:{width:1280,height:900}});const desktop=await fresh.newPage();await desktop.goto(base);await desktop.getByLabel('Teknisyen ismi').fill('Yeni Cihaz');await desktop.getByRole('button',{name:'Kişiyi kaydet'}).click();
+    const fresh=await browser.newContext({viewport:{width:1280,height:900}});const desktop=await fresh.newPage();await desktop.goto(base);await desktop.getByLabel('Teknisyen ismi').fill('Yeni Cihaz');await desktop.getByRole('button',{name:'İsmi kaydet'}).click();
     await desktop.locator('input[type=file]').setInputFiles('test-artifacts/backup.json');await desktop.getByRole('button',{name:'Eksik kayıtları ekle'}).click();assert.equal(await desktop.locator('.visit-card').count(),2);await desktop.evaluate(()=>scrollTo(0,0));await desktop.screenshot({path:'test-artifacts/desktop.png',fullPage:true});
     // Long-list regression: compact by default, receipt beside name, one open card,
     // phone selection and independent time/neighborhood filtering.
@@ -91,18 +91,37 @@ try {
     assert.ok(await desktop.evaluate(()=>document.querySelector('.field-header').getBoundingClientRect().bottom<=0));
     assert.ok(await desktop.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     await desktop.screenshot({path:'test-artifacts/compact-mobile.png'});
+    // Personal settings and manual entry have no region selector; only five neighborhoods.
+    await desktop.getByRole('button',{name:'İsmini düzenle'}).click();
+    assert.equal(await desktop.getByRole('dialog').getByRole('combobox').count(),0);
+    await desktop.getByLabel('Teknisyen ismi').fill('Kendi İsmim');await desktop.getByRole('button',{name:'İsmi kaydet'}).click();
+    await desktop.getByRole('button',{name:'Tek fiş ekle',exact:true}).click();
+    const manual=desktop.getByRole('dialog',{name:'Tek fiş ekle'});
+    await manual.getByLabel('Mahalle',{exact:true}).waitFor();
+    assert.deepEqual(await manual.getByLabel('Mahalle',{exact:true}).locator('option').allTextContents(),['Mahalle seç','Gümüşpala','Denizköşkler','Merkez','Ambarlı','Cihangir']);
+    await manual.getByLabel('Müşteri adı').fill('ELLE EKLENEN');await manual.getByLabel('Sokak, bina, kat ve daire').fill('Örnek sok no 5');
+    await manual.getByLabel('Mahalle',{exact:true}).selectOption('Cihangir');await manual.getByLabel('İş notu').fill('Kişisel saha notu');
+    await manual.getByRole('button',{name:'Kaydet',exact:true}).click();await desktop.reload();
+    const personalState=await desktop.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state);
+    assert.equal(personalState.technicianName,'Kendi İsmim');assert.equal(personalState.region,'Avcılar');
+    assert.equal(personalState.services.find(s=>s.name==='ELLE EKLENEN').notes,'Kişisel saha notu');
+    assert.equal(personalState.services.find(s=>s.name==='ELLE EKLENEN').district,'Avcılar');
+    await desktop.getByText('Son yedek indirme isteği:',{exact:false}).waitFor();
     // Upgrade from the previously deployed notification-only worker.
     const workerPath='dist/reminder-sw.js';const originalWorker=await readFile(workerPath,'utf8');
     try {
         await writeFile(workerPath,"self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(self.clients.claim()));");
         const legacy=await browser.newContext();const upgrade=await legacy.newPage();
         await upgrade.goto(base+'manifest.json');
-        await upgrade.evaluate(async()=>{await navigator.serviceWorker.register('./reminder-sw.js');await navigator.serviceWorker.ready;localStorage.setItem('routex-persist-v1',JSON.stringify({version:1,state:{technicianName:'Eski kullanıcı',region:'Avcılar',services:[],archive:[]}}));});
+        await upgrade.evaluate(async()=>{await navigator.serviceWorker.register('./reminder-sw.js');await navigator.serviceWorker.ready;localStorage.setItem('routex-persist-v1',JSON.stringify({version:1,state:{technicianName:'Eski kullanıcı',region:'Başakşehir',services:[{id:'upgrade-note',name:'Eski fiş',mahalle:'Şahintepe',district:'Başakşehir',status:'pending',createdAt:1,notes:'Güncellemede koru'}],archive:[]}}));});
         await writeFile(workerPath,originalWorker);
         await upgrade.goto(base);await upgrade.getByRole('button',{name:'Güncelle ve yeniden aç'}).waitFor();
         assert.equal(await upgrade.getByText('Çevrimdışı açılış hazır.',{exact:false}).count(),0);
         await upgrade.getByRole('button',{name:'Güncelle ve yeniden aç'}).click();await upgrade.getByText('Çevrimdışı açılış hazır.',{exact:false}).waitFor();
         assert.equal(await upgrade.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state.technicianName),'Eski kullanıcı');
+        await upgrade.getByRole('button',{name:'İsmini düzenle'}).click();await upgrade.getByRole('button',{name:'İsmi kaydet'}).click();
+        const upgradedState=await upgrade.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state);
+        assert.equal(upgradedState.region,'Avcılar');assert.equal(upgradedState.services[0].notes,'Güncellemede koru');assert.equal(upgradedState.services[0].district,'Başakşehir');
         await legacy.setOffline(true);await upgrade.reload();await upgrade.getByText('İnternet yok. Çevrimdışı açılış hazır.',{exact:false}).waitFor();
         await legacy.close();
     } finally {await writeFile(workerPath,originalWorker);}

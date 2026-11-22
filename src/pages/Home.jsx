@@ -1,3 +1,4 @@
+import { REGION } from '../config/region'
 import { CompactVisit } from '../components/CompactVisit'
 import { ImportPanel } from '../components/ImportPanel'
 import { DailyPlan } from '../components/DailyPlan'
@@ -15,7 +16,7 @@ import { ArrowUpRight, ClipboardPaste, Search, Clock, Plus, Trash2 } from 'lucid
 import { orderedVisits, visitSlot, morningNearby, isMorning } from '../utils/scheduling'
 
 export const Home = () => {
-    const region = useServiceStore(state => state.region);
+    const region = REGION.name;
     const { services, archive, lastImport, startNewDay, clearDay } = useServiceStore();
     const [mahalleFilter,setMahalleFilter] = useState('');
     const [slotFilter,setSlotFilter]=useState(''),[expandedVisit,setExpandedVisit]=useState(null);
@@ -27,7 +28,6 @@ export const Home = () => {
     const allVisits = useMemo(() => groupVisits(services), [services]);
     const remaining = useMemo(() => allVisits.filter(v => v.items.some(s => ['pending', 'postponed','waiting_parts'].includes(s.status))), [allVisits]);
     const sortSlot = visitSlot;
-    useEffect(()=>setMahalleFilter(''),[region]);
     const mahalleOptions = useMemo(() => {
         const map = new Map();
         allVisits.forEach(v => {
@@ -52,7 +52,7 @@ export const Home = () => {
     const late = actionable.filter(v => appointmentState(sortSlot(v), clock) === 'late').length;
     const scheduled = actionable.filter(v => sortSlot(v) !== 'Saatsiz').length;
     return <div className={`field-shell compact-home ${largeView ? 'large-field-view' : ''}`}>
-        <div className="page-intro"><div><p className="eyebrow">GÜNLÜK OPERASYON / {region || 'TÜM BÖLGELER'}</p><h1>Önce saat. Sonra yol.</h1><p>eCom listeni aktar, müşteriye ulaş, işini takip et.</p></div><button className="primary-btn" onClick={() => setImportOpen(true)}><ClipboardPaste size={18}/> eCom listesini aktar</button></div>
+        <div className="page-intro"><div><p className="eyebrow">GÜNLÜK İŞLER / {region}</p><h1>Bugünkü işlerim</h1><p>eCom listeni aktar, müşteriye ulaş, işini takip et.</p></div><div className="daily-entry-actions"><button className="primary-btn" onClick={() => setImportOpen(true)}><ClipboardPaste size={18}/> eCom listesini aktar</button><button className="quiet-btn" onClick={()=>setManual(true)}><Plus size={16}/>Tek fiş ekle</button></div></div>
         <div className="metrics compact-metrics">{[['Kalan ziyaret', remaining.length, `${services.length} servis fişi`], ['Saatli ziyaret', scheduled, 'Randevular öncelikli'], ['Tamamlanan fiş', doneCount, 'Bugün tamamlanan fişler']].map(([label, value, sub]) => <div className="metric" key={label}><span>{label}</span><strong>{value}</strong><small>{sub}</small></div>)}</div>
         <div className={`priority-strip ${late ? 'risk' : ''}`}><Clock size={20}/><div><strong>{late ? `${late} ziyaretin randevu aralığı geçti` : `${scheduled} saatli ziyaret sırada`}</strong><p>{late ? 'Bu kayıtları kontrol edip müşterilerle görüş.' : 'Yakındaki bir işe geçmeden önce sıradaki randevunu kontrol et.'}</p></div><span>{clock.toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul', hour: '2-digit', minute: '2-digit' })}</span></div>
 
@@ -69,8 +69,8 @@ export const Home = () => {
             const newSlot=!previous || visitSlot(previous)!==slot;
             return <section key={v.key}>{newSlot&&<h2 className="schedule-heading">{slot.replace('/','–')} {isMorning(slot)?'· Öncelikli':''}</h2>}<CompactVisit visit={v} clock={clock} expanded={expandedVisit===v.key} onToggle={()=>setExpandedVisit(expandedVisit===v.key?null:v.key)} onNotice={setNotice}/></section>;
         })}</div></section>
-        <aside className="side-panel"><p className="eyebrow">GÜN SONU</p><h2>Kayıtlarını koru.</h2><p>eCom, resmi fiş ve stok kaydın. Burada saha notlarını ve iş takibini tut.</p><button className="quiet-btn" onClick={()=>setManual(true)}><Plus size={16}/>Tek fiş ekle</button><details className="optional-tools"><summary>Plan ve malzeme araçları</summary>        <DailyPlan visits={allVisits} region={region} clock={clock} onShow={v=>{setQuery(v.items[0].receiptNo || v.name);setFilter('remaining');setMahalleFilter('');setSlotFilter('');}}/><MaterialsList visits={allVisits}/>
-</details><BackupPanel/><details className="settings-panel"><summary>Görünüm ayarları</summary>        <div className="field-options"><button className="quiet-btn" aria-pressed={largeView} onClick={() => { try{localStorage.setItem('fieldops-large-view',String(!largeView));}catch{/* Keep the setting in memory. */} setLargeView(!largeView); }}>{largeView ? 'Normal yazı' : 'Büyük yazı'}</button></div></details><ActivityLog/>{lastImport&&<details><summary>Son aktarım raporu</summary><p>{new Date(lastImport.at).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})}</p><p>{lastImport.before} aktif → {lastImport.after} aktif · {lastImport.processed} fiş işlendi</p><p>{lastImport.added} yeni · {lastImport.updated} güncel · {lastImport.restored} geri açılan</p><p>{lastImport.missing.length?'Eksik fişler: '+lastImport.missing.join(', '):'Okunan fişlerin tümü aktif listede doğrulandı.'}</p></details>}<button className="quiet-btn" onClick={()=>{if(confirm('Tamamlanan ve iptal edilen fişler arşive taşınacak. Bitmemiş işler listede kalacak. Devam edilsin mi?'))startNewDay();}}>Kapanan işleri arşivle</button><button type="button" className="delete-day-btn" onClick={()=>{if(!services.length){setNotice('Silinecek aktif iş bulunmuyor.');return;}if(confirm('Tüm gün silinecek, arşive kaydedilmeyecek. Silinsin mi?')){clearDay();setNotice('Tüm gün silindi. Arşive kaydedilmedi.');}}}><Trash2 size={16}/>Tüm günü sil</button></aside></div>
+        <aside className="side-panel"><p className="eyebrow">GÜN SONU</p><h2>Kayıtlarını koru.</h2><p>eCom, resmi fiş ve stok kaydın. Burada saha notlarını ve iş takibini tut.</p><details className="optional-tools"><summary>Plan ve malzeme araçları</summary>        <DailyPlan visits={allVisits} region={region} clock={clock} onShow={v=>{setQuery(v.items[0].receiptNo || v.name);setFilter('remaining');setMahalleFilter('');setSlotFilter('');}}/><MaterialsList visits={allVisits}/>
+</details><BackupPanel/><details className="settings-panel"><summary>Görünüm ayarları</summary>        <div className="field-options"><button className="quiet-btn" aria-pressed={largeView} onClick={() => { try{localStorage.setItem('fieldops-large-view',String(!largeView));}catch{/* Keep the setting in memory. */} setLargeView(!largeView); }}>{largeView ? 'Normal yazı' : 'Büyük yazı'}</button></div></details><ActivityLog/>{lastImport&&<details><summary>Son aktarım özeti</summary><p>{new Date(lastImport.at).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})}</p><p>{lastImport.before} aktif → {lastImport.after} aktif · {lastImport.processed} fiş işlendi</p><p>{lastImport.added} yeni · {lastImport.updated} güncel · {lastImport.restored} geri açılan</p><p>{lastImport.missing.length?'Eksik fişler: '+lastImport.missing.join(', '):'Okunan fişlerin tümü aktif listede doğrulandı.'}</p></details>}<button className="quiet-btn" onClick={()=>{if(confirm('Tamamlanan ve iptal edilen fişler arşive taşınacak. Bitmemiş işler listede kalacak. Devam edilsin mi?'))startNewDay();}}>Kapanan işleri arşivle</button><button type="button" className="delete-day-btn" onClick={()=>{if(!services.length){setNotice('Silinecek aktif iş bulunmuyor.');return;}if(confirm('Tüm gün silinecek, arşive kaydedilmeyecek. Silinsin mi?')){clearDay();setNotice('Tüm gün silindi. Arşive kaydedilmedi.');}}}><Trash2 size={16}/>Tüm günü sil</button></aside></div>
         {manual && <ServiceForm onClose={()=>setManual(false)}/>}
         {notice && <p className="notice floating-notice" role="status">{notice}<button className="quiet-btn" onClick={()=>setNotice('')}>Kapat</button></p>}
         {importOpen && <ImportPanel onClose={()=>setImportOpen(false)} onImported={result=>setNotice(result.missing.length?'Eksik fişler: '+result.missing.join(', '):result.added+' yeni fiş, '+result.restored+' arşivden dönen, '+result.updated+' güncellenen. '+result.processed+' fiş doğrulandı.')}/>}

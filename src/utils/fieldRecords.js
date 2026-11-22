@@ -1,3 +1,4 @@
+import { REGION } from '../config/region.js';
 import { formatMahalle } from './profile.js';
 // Remove retired commercial fields without touching service types or technician notes.
 const retired = new Set(['plus','aksesuar','bakim','plusQuantity','aksesuarQuantity','bakimQuantity','prime','totalPrime','pendingPrime','saleRate','avgPrime']);
@@ -9,4 +10,4 @@ export const fieldRecord = record => {
     if (cleaned.statusBeforeDone === 'waiting_parts') cleaned.statusBeforeDone = 'pending';
     return cleaned;
 };
-export const fieldState = state => ({...state,services:(state.services || []).map(fieldRecord),archive:(state.archive || []).map(fieldRecord)});
+export const fieldState = state => ({...state,region:REGION.name,services:(state.services || []).map(fieldRecord),archive:(state.archive || []).map(fieldRecord)});

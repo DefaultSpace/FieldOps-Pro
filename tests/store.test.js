@@ -7,7 +7,7 @@ let storage=new Map();globalThis.localStorage={getItem:key=>storage.get(key)||nu
 const {useServiceStore:store}=await import('data:text/javascript;base64,'+Buffer.from(outputFiles[0].text).toString('base64'));
 test('actual store: archive import, complete, archive, restore, delete undo, and persisted data',()=>{
  store.setState({services:[],archive:[{id:'archived',receiptNo:'123456789',name:'Örnek',status:'done',createdAt:Date.now()-86400000,notes:'sakla',plusQuantity:2}],lastDeleted:null});
- assert.equal(store.getState().importServices([{receiptNo:'123456789',name:'Örnek'}]).restored,1);
+ assert.equal(store.getState().importServices([{receiptNo:'123456789',name:'Örnek',mahalle:'Ambarlı',district:'Avcılar'}]).restored,1);
  assert.equal(store.getState().archive.length,0);assert.equal(store.getState().services[0].status,'pending');
  store.getState().completeVisit(['archived']);assert.ok(store.getState().services[0].completedAt);
  store.getState().startNewDay();assert.equal(store.getState().archive[0].status,'done');
@@ -33,4 +33,36 @@ test('legacy storage migration removes commercial fields while retaining jobs, n
  assert.equal(store.getState().services[0].jobType,'Bakım');assert.equal(store.getState().services[0].notes,'pompa takılacak');
  assert.equal(store.getState().services[0].plus,undefined);assert.equal(store.getState().archive[0].aksesuarQuantity,undefined);
  assert.equal(JSON.parse(storage.get('routex-persist-v1')).version,1);
+});
+
+test('manual creation enforces the five neighborhoods and fixed district',()=>{
+ store.setState({services:[],archive:[]});
+ const base={name:'Kişisel iş',address:'Örnek sok no 1',notes:'Koru'};
+ for(const mahalle of ['Firuzköy','Tahtakale','Üniversite','Yeşilkent','Mustafa Kemal Paşa',''])assert.ok(store.getState().addService({...base,mahalle}).error);
+ assert.ok(store.getState().addService({...base,mahalle:'Merkez',district:'Esenyurt'}).error);
+ assert.equal(store.getState().services.length,0);
+ for(const mahalle of ['Gümüşpala','Denizköşkler','Merkez','Ambarlı','Cihangir'])assert.ok(store.getState().addService({...base,mahalle}).id);
+ assert.ok(store.getState().services.every(s=>s.district==='Avcılar'&&s.notes==='Koru'));
+ assert.ok(store.getState().addService({...base,mahalle:'GUMUSPALA'}).id);
+ assert.equal(store.getState().services[0].mahalle,'Gümüşpala');
+});
+test('direct imports cannot bypass the region filter or mutate existing records when all are ignored',()=>{
+ const old={id:'old',receiptNo:'159000001',name:'Eski kayıt',mahalle:'Firuzköy',district:'Avcılar',status:'done',completedAt:1,notes:'Koru'};
+ store.setState({services:[old],archive:[]});
+ const checkpoint=storage.get('fieldops-checkpoint');
+ const result=store.getState().importServices([{...old,notes:'Değiştirme'}, {receiptNo:'159000002',mahalle:'Merkez',district:'Esenyurt'}, {receiptNo:'159000003',mahalle:'Ambarlı',ignored:true}]);
+ assert.equal(result.processed,0);assert.equal(result.skipped,3);
+ assert.deepEqual(store.getState().services,[old]);assert.deepEqual(store.getState().archive,[]);
+ assert.equal(storage.get('fieldops-checkpoint'),checkpoint);
+});
+test('current-version profile migration fixes region while retaining outside-area records and history',async()=>{
+ const old={id:'outside',name:'Eski kayıt',mahalle:'Şahintepe',district:'Başakşehir',status:'pending',notes:'Koru',history:[{id:'event',type:'note',at:1}]};
+ storage.set('routex-persist-v1',JSON.stringify({version:1,state:{technicianName:'Adım',region:'Başakşehir',services:[old],archive:[{...old,id:'archived'}]}}));
+ await store.persist.rehydrate();
+ assert.equal(store.getState().region,'Avcılar');assert.equal(store.getState().technicianName,'Adım');
+ assert.deepEqual(store.getState().services,[old]);assert.equal(store.getState().archive.length,1);
+ store.getState().saveProfile(' Yeni isim ','Başakşehir');
+ assert.equal(store.getState().region,'Avcılar');assert.equal(store.getState().technicianName,'Yeni isim');
+ store.getState().restoreBackup({s:[{...old,id:'restored'}],a:[],activity:[]});
+ assert.equal(store.getState().services.find(s=>s.id==='restored').notes,'Koru');
 });

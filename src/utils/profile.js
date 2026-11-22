@@ -1,9 +1,4 @@
 import { dayKey } from './workflow.js'
-export const REGIONS = {
-    'Başakşehir': ['Altınşehir', 'Güvercintepe', 'Şahintepe'],
-    'Parseller': ['Mustafa Kemal Paşa', 'Yeşilkent', 'Üniversite'],
-    'Avcılar': ['Merkez', 'Denizköşkler', 'Gümüşpala', 'Ambarlı', 'Cihangir']
-};
 export const KNOWN_MAHALLE = {
     'altınşehir': 'Altınşehir',
     'altinsehir': 'Altınşehir',
