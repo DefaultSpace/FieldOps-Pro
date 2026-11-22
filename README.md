@@ -1,51 +1,46 @@
 # FieldOps Pro
 
-Tek kişinin Avcılar / İstanbul saha işlerinde kullandığı, eCom listesinden çalışan kişisel günlük iş takip aracı. eCom; resmi fiş, fotoğraf, imza ve stok işlemlerinin yapıldığı sistem olmaya devam eder.
+Avcılar / İstanbul’da kendi günlük saha işlerimi takip etmek için kullandığım kişisel araç. Tek kişi ve tek cihazdaki tarayıcı için tasarlanmıştır. Kullanıcı hesabı, backend, otomatik cihaz eşitlemesi veya eCom entegrasyonu yoktur.
 
-## Kullanım
+Çalışma alanı: **Gümüşpala, Denizköşkler, Merkez, Ambarlı ve Cihangir**. Bölge seçilmez; mahalle listesi `src/config/region.js` içinde tutulur.
 
-- Teknisyen adını kaydet; bölge isteğe bağlıdır.
-- Tablette eCom listesini kopyala, FieldOps içindeki “eCom listesini aktar” alanına yapıştır.
-- Aktarım uyarılarını ve yeni/güncellenen/arşivden dönen fiş sayılarını kontrol et.
-- Saat ve mahalleye göre işleri takip et. Numara kopyalama, düzenlenebilir WhatsApp mesajları, iş/malzeme notları ve harita bağlantısı kullan.
-- Fotoğrafları eCom’a yükleyip resmi fişi orada kapat. FieldOps’ta Tamamla seçeneği yalnızca yerel kaydı tamamlar.
-- Tamamlananlar ve arşivde fişleri tarih/isim/adres/telefonla ara.
-- Gün sonunda kapanan işleri arşivle; bitmemiş işler listede kalır. Düzenli olarak JSON yedeği indir.
+## Günlük kullanım
 
-Prim ve satış takibi kaldırıldı. Uygulama saha işlerine odaklanır.
+1. Hazır müşteri mesajlarında kullanılacak ismini kaydet.
+2. eCom listesini kopyalayıp “eCom listesini aktar” alanına yapıştır.
+3. Önizlemede aktarılacak, hatalı ve bölge dışı atlanan fiş sayılarını kontrol et. Eksik kopyalamayı denetlemek için eCom ekranındaki toplamı girebilirsin.
+4. İşleri saat ve mahalleye göre takip et. Karttan telefon/adres kopyala, WhatsApp mesajını düzenle veya haritayı aç. Ayrıntılardan iş notu, erteleme ve iptal işlemlerine ulaş.
+5. Eksik kalan işi “Tek fiş ekle” ile ekle; yalnızca beş mahalleden biri seçilebilir.
+6. Fotoğraf, imza, stok ve resmi fiş kapatma işlemlerini eCom’da yap. Buradaki “Tamamla” yalnızca yerel kaydı tamamlar.
+7. Gün sonunda tamamlanan ve iptal edilen fişleri arşivle; bitmemiş işler listede kalır. JSON yedeğini indir ve dosyanın indirildiğini kontrol et.
 
-Saat sırası: 10–12 (öncelikli), 12–14, 14–16, 16–18, 18–20, saatsiz. Avcılar profiline özel mahalle bölümleri ve Gümüşpala 10–12 uyarısı bulunur. Mahalle filtresi, seçilen mahallenin bütün saatlerini birlikte gösterir.
+10–12 randevuları önce, ardından diğer saatler ve saatsiz işler gelir. Açık 10–12 Gümüşpala ziyaretleri ayrıca hatırlatılır. Arama isim, telefon, adres ve fiş numarasıyla çalışır. Plan, malzeme hazırlığı ve işlem geçmişi gerektiğinde açılır. Yazı boyutu “Görünüm ayarları”ndan değiştirilir.
 
-## Veri davranışı
+## Aktarım ve mevcut kayıtlar
 
-Kayıtlar aynı tarayıcının `routex-persist-v1` alanında tutulur; mevcut veri anahtarı değiştirilmez. Sunucu hesabı veya otomatik cihaz eşitlemesi yoktur. Sürüm 3 JSON yedekleri fiş geçmişini ve günlük işlemleri içerir; eski yedekler de okunur. Geri yükleme mevcut fişleri koruyarak yalnızca eksikleri ekler. Aynı fişin notlarını cihazlar arasında otomatik birleştirmez. Silinen son kayıt grubu açık oturumda geri alınabilir; silme arşive taşımaz.
+- Beş mahalle dışındaki, ilçesi farklı olan veya mahallesi belirlenemeyen eCom kayıtları `ignored: true` ile ayrılır; uyarı onayı gerektirmeden atlanır. Hatalı saat ve eksik kayıtlar ayrıca gösterilir.
+- Elle kayıt ve kayıt katmanından doğrudan aktarım da aynı bölge kontrolünü kullanır.
+- Yeniden aktarım aktif fişin durumunu, notlarını ve elle seçilmiş randevusunu korur. Kaynak saat ayrıca saklanır. Arşivden gelen fiş geçmişiyle yeniden açılır.
+- Yeni listede görünmeyen fişler silinmez. Önceden kaydedilmiş bölge dışı fişler de silinmez veya gizlenmez; bunların notlarına, geçmişine ve arşivine erişim sürer.
+- Eski bölge ayarı Avcılar’a dönüştürülür; teknisyen adı ve kayıtlar korunur. Yedekten kurtarma bölge filtresi nedeniyle eski fişleri düşürmez.
 
-Aktarım, silme, arşivleme ve yedek birleştirmeden önce son durum `fieldops-checkpoint` içinde saklanır. “İşlem öncesi kopyadan eksikleri kurtar” silinmiş kayıtları ekler, mevcut kayıtları eski sürüme çevirmez. Son işlem önceki kurtarma kopyasının yerini alır. Bu kopya aynı tarayıcıdadır; tarayıcı temizliğine karşı günlük indirilen yedek gerekir.
+## Veriyi koruma
 
-eCom aktarımı arşivde bulunan fişi bekleyen olarak geri açar; notlar, önceki tamamlanma zamanı ve işlem geçmişi korunur. Aktif fişin mevcut durumu korunur. Elle seçilen randevu saatini yeni aktarım değiştirmez; kaynak saat ayrıca tutulur ve “eCom saatine dön” ile seçilebilir. Kaynak listede olmayan işler kendiliğinden silinmez.
+Kayıtlar aynı tarayıcının `routex-persist-v1` alanında tutulur. Veri sunucuya gönderilmez. Tarayıcı depolaması şifreli bir kasa değildir; cihaz kilidini kullan ve indirdiğin müşteri verilerini koru.
 
-eCom aktarımı yalnızca Avcılar’daki Gümüşpala, Denizköşkler, Merkez, Ambarlı ve Cihangir mahallelerini kabul eder. Bölge dışı veya mahallesi belirlenemeyen kayıtlar `ignored: true` olarak ayrılır; uyarı onayı gerektirmeden atlanır ve adetleri önizlemede gösterilir. Aynı mahalle adı başka bir ilçede geçiyorsa aktarılmaz. Mevcut yerel kayıtlar bu filtreyle silinmez.
+Aktarım, elle ekleme, silme, gün sonu arşivleme ve yedek birleştirmeden önce `fieldops-checkpoint` kurtarma kopyası alınır. Son işlem önceki kopyanın yerini alır. “İşlem öncesi kopyadan eksikleri kurtar” eksik fişleri ekler; mevcut notların üzerine yazmaz. Son silme açık oturumda geri alınabilir.
 
-## Saha V2
+Sürüm 3 JSON yedeği fişleri ve işlem geçmişini içerir; eski yedekler de okunur. Geri yükleme mevcut fişleri korur ve yalnızca eksikleri ekler. Yedek indirme isteğinin son zamanı İstanbul saatine göre görünür. Bu zaman dosyanın diske yazıldığının garantisi değildir; indirme başarısızsa yeniden dene.
 
-- Aktarım önizlemesi bağımsız 7–12 rakamlı fiş adaylarını, okunabilen ve reddedilen kayıtları sayar. Bozuk saat ve eksik kayıtlar ham metniyle görünür. İsteğe bağlı eCom ekran toplamı eksik kopyalamayı denetler. Uyarılarda açık onay gerekir; aktarım sonrası fişlerin aktif listede olduğu doğrulanır. Metinde hiç bulunmayan fişler, kaynak toplamı girilmeden saptanamaz; tek başına yazılmış telefon/malzeme numarası da aday sayılabilir.
-- Sabah kontrolü 10–12 önceliğini ve saat sırasını korur; aynı dilimde seçilen mahalleyi önerir. Yol süresi hesaplanmaz. “Sonra gel” zamanı gelmeyen işler önerilmez.
-- Malzeme kodu, adet, müşteri ve fiş eşleşmesiyle günlük araç hazırlık listesi vardır. Hazırlık işareti kullanım miktarından ayrıdır ve her gün yenilenir; eCom stoğunu değiştirmez.
-- Günlük liste kısa kartlarla açılır. Müşteri adı ve tüm fiş numaraları başlıkta birlikte görünür; numaraya dokunmak kopyalar. Adres, telefon seçimi/kopyalama, WhatsApp, harita ve tamamlama ayrıntıları açmadan kullanılabilir. Bir seferde tek kartın ayrıntısı görünür; kartı kapatmak kaydedilmemiş not taslağını silmez. Tamamlama mevcut ekranda kalır.
-- Mobilde üst logo/menü kaydırıldığında ekranı örtmez. Arama, mahalle ve saat filtreleri listenin başında sabit kalır; sonuç sayısı ve filtreleri temizleme seçeneği vardır. Plan ve malzeme araçları günlük listenin üstünden isteğe bağlı açılır bölüme taşınmıştır. Büyük yazı seçimi “Görünüm ayarları”ndadır.
-- Ana ekranın “İptal edilenler” sekmesi iptalleri, “Tamamlananlar” tüm tamamlanmış fişleri tarihleriyle, “Arşiv” aktif listeden çıkarılmış kayıtları gösterir.
-- Tamamlama, tekrar açma, erteleme, iptal, not/saat değişiklikleri ve silme günlük geçmişte izlenebilir. Önceden tutulmamış geçmiş geriye dönük oluşturulamaz; eski fişin bilinen tamamlanma zamanı korunur.
-- Benzer müşteri/telefon ve adres yazımları kontrol için işaretlenir; daire farkları korunur, otomatik belirsiz eşleştirme yapılmaz.
+Yerel kayıt hatası ekranda gösterilir. Okunamayan tarayıcı kaydının üzerine yazılmaz. Tarayıcı verilerini temizlemek hem fişleri hem yerel kurtarma kopyasını silebilir; indirilen JSON yedeği bu nedenle gereklidir.
 
-## Çevrimdışı kullanım ve adres
+## Çevrimdışı kullanım
 
-Üretim sürümü HTTPS üzerinde bir kez açılıp **“Çevrimdışı açılış hazır”** göründükten sonra aynı cihaz/tarayıcıda bağlantısız yeniden açılabilir. Uygulama dosyaları sürüme göre önbelleğe alınır; kayıtlar mevcut yerel depoda kalır. Yeni sürüm bulunduğunda açık formları kaydedip “Güncelle ve yeniden aç” seçilmelidir. Tarayıcının depolamayı temizlemesi/boşaltması çevrimdışı dosyaları ve kayıtları kaldırabilir. Geliştirme sunucusu (`npm run dev`) önbellek oluşturmaz; üretim paketiyle test edin.
+Üretim sürümü HTTPS üzerinde bir kez açılıp **“Çevrimdışı açılış hazır”** göründükten sonra aynı cihaz/tarayıcıda bağlantısız yeniden açılabilir. Notlar yerelde kaydedilir. Yeni sürüm hazır olduğunda açık not ve formları kaydedip “Güncelle ve yeniden aç” seçilir.
 
-Uygulama kapalıyken zamanında bildirim garantisi yoktur. Geciken hatırlatıcı açılışta görünür. WhatsApp ve harita bağlantı gerektirir; mesajı kullanıcı gönderir. **Google Maps adres davranışı değiştirilmedi: `Başaran sok no 12`.** Mevcut temizleyici kat/daireyi çıkarır, mahalle/ilçe eklemez; kayıtlı koordinat ve otomatik yol tarifi kullanılmaz. Rota optimizasyonu veya adres doğrulaması yapılmaz.
+WhatsApp ve harita bağlantı gerektirir; mesajı kendin gönderirsin. Uygulama kapalıyken zamanında bildirim garantisi yoktur; geciken hatırlatıcı açılışta gösterilir. Harita araması bina numarasını korur, kat/daireyi çıkarır. Otomatik rota veya konum doğrulaması yapılmaz.
 
-`legacy/UZERINE_TIKLA_CALISTIR.html` tarihî bağımsız sürümdür; üretim paketine alınmaz. Güncel sürüm `src/` altındaki React uygulamasıdır. Kullanılmayan Leaflet, sürükle-bırak ve date-fns bağımlılıkları kaldırılmıştır.
-
-## Geliştirme
+## Geliştirme ve kontrol
 
 ```sh
 npm ci
@@ -57,12 +52,8 @@ npm run test:browser
 npm run dev
 ```
 
-GitHub Pages paketi: `npm run build` (`/FieldOps-Pro/`). Sites kök alan adı: `SITE_DEPLOY=1 npm run build`.
+GitHub Pages paketi `/FieldOps-Pro/` yolunu kullanır. Kök alan adı için `SITE_DEPLOY=1 npm run build` kullanılabilir. Yerel Chrome ile test için `FIELDOPS_CHROME` ayarlanabilir.
 
-Tarayıcı testi yalnızca sentetik müşteri kayıtları kullanır; aktarım, saha işlemleri, çevrimdışı yeniden açılış, geçmiş, kurtarma ve cihazlar arası yedek aktarımını denetler. Ekran görüntüleri ve test yedeği `test-artifacts/` altında, Git dışında kalır. Yerel Chrome için `FIELDOPS_CHROME` ile çalıştırılabilir. PR kontrolü lint, birim testleri, üretim derlemesi ve Chromium senaryosunu çalıştırır.
+Tarayıcı testleri sentetik kayıtlarla aktarım, elle kayıt, kişisel ayarlar, çevrimdışı yeniden açılış/not düzenleme, güncelleme, yedekleme ve kurtarmayı denetler. Test dosyaları `test-artifacts/` altında Git dışında kalır. `legacy/UZERINE_TIKLA_CALISTIR.html` eski bağımsız sürümdür; güncel üretim paketine alınmaz.
 
-[13 Ekim 2026 saha teknik notları](docs/SAHA-INCELEME-2026-10-13.md)
-
-[Güncel saha düzenlemesi](docs/SAHA-DUZENLEME-2026-10-13.md)
-
-“Müşteriye ulaşıldı” ve “Parça bekleniyor / parça geldi” kontrolleri kaldırılmıştır. Eski kayıt/yedeklerdeki parça bekleyen fişler veri kaybı olmadan bekleyen fişe dönüştürülür; eski notlar ve işlem geçmişi korunur.
+[İlk teknik notlar](docs/SAHA-INCELEME-2026-10-13.md) · [Güncel kişisel kullanım notları](docs/SAHA-DUZENLEME-2026-10-13.md)

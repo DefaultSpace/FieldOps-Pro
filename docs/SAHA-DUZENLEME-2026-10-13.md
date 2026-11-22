@@ -1,24 +1,26 @@
-# Saha düzenlemesi — 13 Ekim 2026
+# Kişisel saha kullanımının teknik notları
 
-Bu teknik not önceki incelemenin prim ve harita kararlarının yerine geçer.
+Güncelleme: 22 Kasım 2026.
 
-| Konu | Yeni davranış |
-|---|---|
-| Prim ve satış | Ana sayfa, fiş ayrıntısı, geçmiş ve tamamlananlardan bütün sayaçlar, adet girişleri ve hesaplama kodu kaldırıldı. Eski kayıtlar ve yedekler yüklenirken bu alanlar temizlenir. |
-| Servis bilgileri | İş türü, malzeme listesi, müşteri, adres, telefon ve saha notları korunur. Bakım ve aksesuar teslimi gerçek iş türü olarak kalır. |
-| Harita | Tam adres Google Maps aramasına gönderilir. Eski koordinat veya alternatif navigasyon adresi kullanılmaz, yol tarifi başlatılmaz. Bina/kat/daire metni korunur. |
-| Saat önceliği | 10–12 daima öncelikli, ardından 12–14, 14–16, 16–18, 18–20 ve saatsiz işler. Saat ilerlediğinde bu sıra değişmez. Standart dışı saatler başlangıcına göre sıralanır. |
-| Mahalleler | Yalnızca Avcılar profili: saat başlıklarının altında mahalle bölümleri. Mahalle filtresiyle o mahalledeki bütün saatler görüntülenir. Diğer profillere bu bölümler/filtre veya Gümüşpala önceliği gösterilmez. Elle kayıt mahalle önerileri de seçilen bölgeye aittir. |
-| Gümüşpala uyarısı | Avcılar profiline, açık 10–12 Gümüşpala ziyaretlerinin müşteri isimleriyle görünür uyarı ve mahalleye geçiş düğmesi. Tamamlanan/iptal edilen işler dahil değildir. |
-| Silme | Ziyaret üzerindeki Sil tüm fişlerini, fiş ayrıntısındaki Sil yalnız o fişi siler. Arşive taşımaz. Yanlış dokunmaya karşı onay ve yalnız açık oturumda geri alma korunur; silinen kayıt kalıcı yedeğe eklenmez. |
-| İptal / erteleme | eCom’dan gelen gerçek fiş numarası otomatik doldurulur. Önceki mesajdaki eski numara yerine kaydın numarası kullanılır. Çok fişli ziyarette bir fiş numarası, işlem yapılan fiş sayısı ve sebep birleşir. Numara yoksa elle giriş mümkündür. |
+## Kapsam
 
-Örnek mesaj: `159000001 3 kaydı var evde değilmiş yarın ister`
+Tek kişi, tek cihaz ve Avcılar’daki beş mahalle: Gümüşpala, Denizköşkler, Merkez, Ambarlı, Cihangir. Hesap, backend, eşitleme veya dış sistem entegrasyonu bulunmaz.
+
+## Kayıt kuralları
+
+- `src/config/region.js` ortak mahalle listesi ve bölge kontrolünü sağlar.
+- Profil yalnızca hazır mesajlarda kullanılan ismi düzenler. Bölge Avcılar olarak sabittir.
+- Elle kayıt ekranında mahalle seçilir; ilçe seçimi ve serbest mahalle girişi yoktur.
+- Kayıt katmanı hem elle eklemede hem eCom aktarımında bölgeyi denetler. Tamamı atlanan aktarım mevcut fişleri veya kurtarma kopyasını değiştirmez.
+- Ayrıştırıcı bölge dışını `ignored: true` ile ayırır. Hatalı kayıtlarla bölge dışı atlananların adetleri ayrı gösterilir.
+- Eski bölge ayarı yüklenirken Avcılar’a dönüşür. Eski fişlerin ilçesi, notları, geçmişi ve arşivi korunur. Yedek kurtarma bu fişleri filtrelemez.
+
+## Günlük ekran ve veri
+
+Saat, mahalle, müşteri, telefon ve adres kart üzerinde görünür. Tamamlama doğrudan; not, erteleme ve iptal ayrıntılardan kullanılabilir. Elle kayıt günlük listenin başındadır. Plan ve malzeme araçları isteğe bağlı açılır.
+
+Yerel veri anahtarı değişmez. İşlem öncesi kurtarma, silmeyi geri alma ve JSON yedekleri korunur. Yedek indirme zamanı İstanbul saatindedir; dosyanın indirildiği ayrıca kontrol edilmelidir. Yeni sürümden önce açık taslaklar kaydedilir.
 
 ## Doğrulama
 
-31 otomatik test geçti; GitHub Pages üretim derlemesi başarılı. Kontroller: saat sırası, bölge/durum/saat filtreli uyarı, harita arama parametreleri, otomatik mesaj, eski verilerin dönüşümü, yedek yükleme, arşivden aktarım ve kalıcı silme davranışı.
-
-Fiziksel tablette görsel/dokunmatik kontrol yapılmadı. Google Maps arama sonucunda tek eşleşme bulursa kendisi bir yeri gösterebilir; uygulama işletme, koordinat veya rota seçmez. Alternatif olarak mevcut adres kopyalama düğmesiyle metni kopyalayıp Maps arama alanına elle yapıştırabilirsin.
-
-Kayıtlar cihazın tarayıcısında kalır. Yeni sürüm veri alanlarını dönüştürürken servis ve notları korur. eCom’daki fiş, fotoğraf ve resmi işlemler ayrı yürütülür.
+Lint, birim testleri, üretim derlemesi ve tarayıcı senaryosu çalıştırılır. Kontroller beş mahalle sınırını, eski kayıtların korunmasını, elle kayıt kalıcılığını, çevrimdışı not düzenlemeyi, sürüm güncellemesini ve yedek kurtarmayı kapsar. Fiziksel saha cihazındaki dokunma, indirme ve dış uygulama geçişleri ayrıca doğrulanmalıdır.
