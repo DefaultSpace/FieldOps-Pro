@@ -1,11 +1,12 @@
 let problem='';
+let checkpointProblem='';
 let unreadable=false;
 function report(message){problem=message;if(typeof window!=='undefined')window.dispatchEvent(new Event('fieldops-storage'));}
-export const storageProblem=()=>problem;
+export const storageProblem=()=>[problem,checkpointProblem].filter(Boolean).join(' ');
 export function saveCheckpoint(state) {
  if(unreadable)return;
- try {localStorage.setItem('fieldops-checkpoint',JSON.stringify({version:3,exportedAt:Date.now(),s:state.services,a:state.archive,activity:state.activity || []}));}
- catch {report('İşlem öncesi yerel kurtarma kopyası kaydedilemedi. Yedek indir ile kayıtlarını al.');}
+ try {localStorage.setItem('fieldops-checkpoint',JSON.stringify({version:3,exportedAt:Date.now(),s:state.services,a:state.archive,activity:state.activity || []}));checkpointProblem='';report(problem);}
+ catch {checkpointProblem='İşlem öncesi yerel kurtarma kopyası kaydedilemedi. Yedek indir ile kayıtlarını al.';report(problem);}
 }
 export function readCheckpoint(){try{return localStorage.getItem('fieldops-checkpoint');}catch{return null;}}
 export const safeStorage={
