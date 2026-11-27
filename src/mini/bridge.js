@@ -1,3 +1,4 @@
+import { reminderPlan, setReminderStatus } from './reminders.js';
 import { useServiceStore as store } from '../store/useServiceStore.js';
 import { acceptOperation, snapshot, STORAGE_KEY } from './protocol.js';
 import { storageProblem } from '../utils/storage.js';
@@ -9,10 +10,11 @@ export function startMiniBridge() {
     const native = window.FieldOpsMini;
     if (!native?.postMessage) return;
     if (!store.getState().miniSync?.epoch) store.setState({miniSync:{epoch:crypto.randomUUID(),receipts:{}}});
-    let busy=false, stopped=false;
+    let busy=false, stopped=false, queued=false;
     const send = message => native.postMessage(JSON.stringify(message));
     const tick = async () => {
-        if (busy || stopped) return;
+        if(stopped)return;
+        if(busy){queued=true;return;}
         busy=true;
         try {
             if (storageProblem()) throw new Error(storageProblem());
@@ -20,10 +22,11 @@ export function startMiniBridge() {
             const durable = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')?.state;
             const state=store.getState();
             if (!durable?.miniSync || JSON.stringify(durable.services)!==JSON.stringify(state.services)) throw new Error('Saat eşitlemesi kayıtların kaydedilmesini bekliyor.');
+            send({type:'reminders',value:reminderPlan(state.services)});
             send({type:'snapshot',value:await snapshot(state)});
             send({type:'poll'});
         } catch (error) { report(error.message); }
-        finally {busy=false;}
+        finally {busy=false;if(queued&&!stopped){queued=false;queueMicrotask(tick);}}
     };
     let chain=Promise.resolve();
     native.onmessage = event => {
@@ -32,11 +35,16 @@ export function startMiniBridge() {
             if (message.type === 'operations') {
                 for (const op of message.value) send({type:'ack',value:await acceptOperation(store,op)});
                 report('Saat bağlantısı hazır. Saatten gelen işlemler telefon açıkken kaydedilir.');
-            } else if (message.type === 'error') report(message.message);
+            } else if (message.type === 'reminderStatus') setReminderStatus(message);
+            else if (message.type === 'error') {setReminderStatus(null);report(message.message);}
         }).catch(error=>report(error.message));
     };
     // Periodic polling also recovers a missed listener event and date rollover.
+    const unsubscribe=store.subscribe((state,previous)=>{
+        if(state.services===previous.services && state.preferences===previous.preferences)return;
+        queueMicrotask(()=>{if(!stopped)void tick();});
+    });
     void tick();
     const timer=setInterval(tick,4000);
-    return () => {stopped=true;clearInterval(timer);native.onmessage=null;};
+    return () => {stopped=true;unsubscribe();clearInterval(timer);native.onmessage=null;};
 }

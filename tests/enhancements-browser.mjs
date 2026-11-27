@@ -1,0 +1,47 @@
+import assert from 'node:assert/strict';
+import {spawn} from 'node:child_process';
+import {chromium} from 'playwright';
+const port=4189,base=`http://127.0.0.1:${port}/FieldOps-Pro/`;
+const server=spawn(process.execPath,['node_modules/vite/bin/vite.js','preview','--host','127.0.0.1','--port',String(port),'--strictPort'],{stdio:'pipe'});
+let browser;
+try {
+ await new Promise((resolve,reject)=>{server.stdout.on('data',d=>{if(String(d).includes(String(port)))resolve();});server.on('error',reject);});
+ browser=await chromium.launch({headless:true,executablePath:process.env.FIELDOPS_CHROME});
+ const context=await browser.newContext({viewport:{width:390,height:844}});
+ await context.addInitScript(()=>{if(!localStorage.getItem('routex-persist-v1'))localStorage.setItem('routex-persist-v1',JSON.stringify({version:1,state:{technicianName:'Test',services:[{id:'one',receiptNo:'123456789',name:'Örnek Müşteri',phone:'905550000000',phones:['905550000001'],address:'Örnek sok no 1 d2',mahalle:'Gümüşpala',district:'Avcılar',device:'Bosch | Çamaşır Makinesi',status:'pending',timeSlot:'10/12',createdAt:Date.now()}],archive:[]}}));});
+ const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(base);
+ const nav=page.getByRole('navigation',{name:'Ana gezinme'});
+ assert.deepEqual(await nav.locator('a').allTextContents(),['Bugün','Malzeme','Arşiv','İstatistikler','Ayarlar']);
+ await page.locator('.next-visit').getByRole('heading',{name:'Örnek Müşteri'}).waitFor();
+ const card=page.locator('.visit-card');await card.getByLabel('Müşteri telefonu').selectOption('905550000001');await card.getByRole('button',{name:'WhatsApp',exact:true}).click();
+ assert.equal(new URL(await page.getByRole('link',{name:'Sohbeti aç'}).getAttribute('href')).pathname,'/905550000001');
+ await page.getByRole('button',{name:'Hazır mesaj oluştur',exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:'Hazır mesaj oluştur'});
+ await dialog.getByLabel('Cihaz kategorisi',{exact:true}).selectOption({label:'Çamaşır makinesi'});await dialog.getByLabel('Şikâyet / işlem').selectOption({label:'Kapaktan su akıtma'});
+ assert.equal(await dialog.getByLabel('Marka',{exact:true}).inputValue(),'Bosch');await dialog.getByRole('button',{name:'Mesajı hazırla'}).click();
+ assert.doesNotMatch(await dialog.getByLabel('Mesaj önizlemesi').inputValue(),/yırtık|ücretsiz/);
+ let url=new URL(await dialog.getByRole('link',{name:'WhatsApp’ta aç'}).getAttribute('href'));assert.equal(url.pathname,'/905550000001');assert.match(url.searchParams.get('text'),/lastiğinin/);
+ await dialog.getByLabel('Cihaz kategorisi',{exact:true}).selectOption({label:'Genel servis işlemleri'});await dialog.getByLabel('Şikâyet / işlem').selectOption({label:'Ücretsiz parça değişimi'});await dialog.getByRole('button',{name:'Mesajı hazırla'}).click();
+ await dialog.getByText('Doldurulması gereken alanlar:',{exact:false}).waitFor();assert.equal(await dialog.getByRole('link',{name:'WhatsApp’ta aç'}).count(),0);
+ await dialog.getByLabel('parça',{exact:true}).fill('Ön sac');await dialog.getByLabel('tarih',{exact:true}).fill('28 Kasım 10–12');await dialog.getByRole('button',{name:'Mesajı hazırla'}).click();
+ await dialog.getByLabel('Mesaj önizlemesi').fill('Düzenlenmiş Türkçe: Ön sac');url=new URL(await dialog.getByRole('link',{name:'WhatsApp’ta aç'}).getAttribute('href'));assert.equal(url.searchParams.get('text'),'Düzenlenmiş Türkçe: Ön sac');
+ await dialog.getByRole('button',{name:'Kapat',exact:true}).last().click();
+ await card.getByRole('button',{name:'Ayrıntılar',exact:true}).click();await card.getByRole('button',{name:'Ertele',exact:true}).click();
+ assert.deepEqual(await page.getByLabel('Hazır sebep').locator('option').allTextContents(),['Özel sebep yaz','Müşteri evde yok','Telefona cevap vermiyor']);await page.getByLabel('Hazır sebep').selectOption('Müşteri evde yok');await page.getByRole('dialog').getByRole('button',{name:'Ertele',exact:true}).click();
+ await nav.getByText('Ayarlar',{exact:true}).click();await page.getByLabel('Yeni erteleme sebebi').fill('Müşterinin istediği gün');await page.getByRole('button',{name:'Sebep ekle'}).click();
+ await page.getByLabel('Yeni cihaz kategorisi').fill('Kişisel kategori');await page.getByRole('button',{name:'Kategori ekle'}).click();await page.getByRole('button',{name:'Şikâyet / şablon ekle'}).click();await page.getByLabel('Şablon başlığı').fill('Özel mesaj');await page.getByLabel('Şablon metni').fill('Merhaba {{bilgi}}');await page.getByRole('button',{name:'Şablonu kaydet'}).click();
+ await page.reload();await page.getByLabel('Cihaz kategorisi',{exact:true}).selectOption({label:'Kişisel kategori'});await page.getByText('Özel mesaj',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Erteleme sebebi 3').inputValue(),'Müşterinin istediği gün');
+ await page.getByLabel('Etkin',{exact:true}).uncheck();await page.reload();await page.getByLabel('Cihaz kategorisi',{exact:true}).selectOption({label:'Kişisel kategori'});assert.equal(await page.getByLabel('Etkin',{exact:true}).isChecked(),false);
+ const downloadEvent=page.waitForEvent('download');await page.getByRole('button',{name:'Yedek indir',exact:true}).click();await (await downloadEvent).saveAs('test-artifacts/enhancements-backup.json');
+ await nav.getByText('İstatistikler',{exact:true}).click();await page.getByRole('heading',{name:'İstatistikler'}).waitFor();assert.match(await page.locator('.metrics').innerText(),/Erteleme işlemi\n1/);
+ await page.screenshot({path:'test-artifacts/statistics-mobile.png',fullPage:true});
+ await nav.getByText('Bugün',{exact:true}).click();await page.screenshot({path:'test-artifacts/next-visit-mobile.png',fullPage:true});
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await page.goto(base+'#/?visit=one');await page.locator('.compact-details:visible').waitFor();assert.equal(await page.getByLabel('Ziyaret ara').inputValue(),'123456789');
+ // Fresh device: old local storage gets defaults, then restores the user's editable preferences.
+ const fresh=await browser.newContext({viewport:{width:390,height:844}});await fresh.addInitScript(()=>localStorage.setItem('routex-persist-v1',JSON.stringify({version:1,state:{technicianName:'Yeni cihaz',services:[],archive:[]}})));
+ const restored=await fresh.newPage();await restored.goto(base+'#/settings');await restored.locator('input[type=file]').setInputFiles('test-artifacts/enhancements-backup.json');await restored.getByRole('button',{name:'Eksik kayıtları ekle'}).click();await restored.getByLabel('Cihaz kategorisi',{exact:true}).selectOption({label:'Kişisel kategori'});await restored.getByText('Özel mesaj',{exact:true}).waitFor();
+ assert.equal(await restored.getByLabel('Etkin',{exact:true}).isChecked(),false);
+ assert.deepEqual(errors,[]);console.log('PASS: mobile tabs, next visit, recipient choice, Turkish templates, required fields, editable persistent categories/reasons, statistics, notification deep link, preference backup restore.');
+} finally {await browser?.close();server.kill();}

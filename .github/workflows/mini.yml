@@ -28,7 +28,7 @@ jobs:
       - run: npm run test:mini-browser
         env:
           FIELDOPS_MINI_ASSETS: '1'
-      - run: chmod +x gradlew && ./gradlew :shared:testDebugUnitTest :phone:assembleDebug :wear:assembleDebug :phone:lintDebug :wear:lintDebug
+      - run: chmod +x gradlew && ./gradlew :phone:testDebugUnitTest :shared:testDebugUnitTest :phone:assembleDebug :wear:assembleDebug :phone:lintDebug :wear:lintDebug
         working-directory: android-mini
       - uses: actions/upload-artifact@v4
         with:

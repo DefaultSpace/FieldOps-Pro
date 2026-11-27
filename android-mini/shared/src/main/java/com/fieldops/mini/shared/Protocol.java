@@ -18,6 +18,9 @@ public final class Protocol {
     }
     public static boolean snapshot(JSONObject s) {
         if(s.optInt("v")!=1 || !uuid(s.optString("epoch")) || s.optLong("generatedAt")<=0 || !s.optString("day").matches("\\d{4}-\\d{2}-\\d{2}")) return false;
+        JSONArray reasons=s.optJSONArray("postponeReasons");
+        if(s.has("postponeReasons")&&reasons==null)return false;
+        if(reasons!=null){if(reasons.length()>100)return false;for(int i=0;i<reasons.length();i++)if(!(reasons.opt(i) instanceof String)||reasons.optString(i).trim().isEmpty()||reasons.optString(i).length()>200)return false;}
         JSONArray rows=s.optJSONArray("records"); if(rows==null || rows.length()>1000) return false;
         java.util.HashSet<String> ids=new java.util.HashSet<>();
         for(int i=0;i<rows.length();i++) {

@@ -3,7 +3,7 @@ import { useServiceStore } from '../store/useServiceStore'
 import { actionMessage, firstReceipt, receiptForAction } from '../utils/actionMessage'
 import { copyText } from '../utils/contacts'
 export function VisitActions({ visit }) {
-    const { updateService, removeVisit } = useServiceStore();
+    const { updateService, removeVisit, preferences } = useServiceStore();
     const [action, setAction] = useState(''), [reason, setReason] = useState('');
     const [receipt, setReceipt] = useState(''), [copyStatus, setCopyStatus] = useState('');
     const pending = visit.items.filter(s => ['pending','postponed','waiting_parts'].includes(s.status));
@@ -30,6 +30,7 @@ export function VisitActions({ visit }) {
         {!action && copyStatus && <small className="copy-report-status" role="status">{copyStatus}</small>}
         {action && <div className="modal-backdrop"><form className="field-modal" onSubmit={save} role="dialog" aria-modal="true" aria-labelledby="visit-action-title"><h2 id="visit-action-title">{action === 'cancel' ? 'Ziyareti iptal et' : action === 'postpone' ? 'Ziyareti ertele' : 'Sil'}</h2><p>{visit.name} · {visit.items.length} fiş</p>{action === 'remove' ? <p>Bu ziyaretin fişleri listeden silinir, arşive taşınmaz. Son silmeyi geri alabilir veya işlem öncesi kopyadan eksikleri kurtarabilirsin.</p> : <>
         {action !== 'remove' && <label>Fiş numarası<input readOnly={!!knownReceipt} autoFocus={!knownReceipt} pattern="[0-9]+" inputMode="numeric" value={receipt} onChange={e => { setReceipt(e.target.value); setCopyStatus(''); }} placeholder="159630038"/></label>}
+        {action === 'postpone' && <label>Hazır sebep<select value={preferences.reasons.includes(reason)?reason:''} onChange={e=>{setReason(e.target.value);setCopyStatus('');}}><option value="">Özel sebep yaz</option>{preferences.reasons.map(r=><option key={r}>{r}</option>)}</select></label>}
         <label>{action === 'postpone' ? 'Erteleme sebebi' : 'İptal sebebi'}<textarea autoFocus={!!knownReceipt} required value={reason} onChange={e => { setReason(e.target.value); setCopyStatus(''); }} placeholder={action === 'cancel' ? 'Müşteri istemiyor' : 'Müşteri evde değil'} className="action-reason"/></label>
         {action !== 'remove' && <div className="postpone-report"><label>WhatsApp için metin<textarea readOnly aria-label="Kopyalanacak işlem metni" value={report}/></label><button className="quiet-btn" type="button" disabled={!receipt.trim() || !reason.trim()} onClick={() => copy(report)}>Metni kopyala</button>{copyStatus && <small role="status">{copyStatus}</small>}</div>}
         <p>{action === 'cancel' ? 'Ziyaret kalan işlerden çıkar. İptal edilenler sekmesinden geri alınabilir.' : 'Ziyaret ertelendi olarak kalan listede durur. Bugün tekrar gideceksen “Sonra gel” ile saat seçebilirsin.'}</p></>}<button className="primary-btn" type="submit">{action === 'remove' ? 'Sil' : action === 'cancel' ? 'İptal et' : 'Ertele'}</button><button className="quiet-btn" type="button" onClick={() => setAction('')}>Vazgeç</button></form></div>}

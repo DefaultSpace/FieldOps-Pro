@@ -1,3 +1,7 @@
+import { BottomNav } from './components/BottomNav'
+import { Materials } from './pages/Materials'
+import { Settings } from './pages/Settings'
+import { Statistics } from './pages/Statistics'
 import { SystemStatus } from './components/SystemStatus'
 import { MiniStatus } from './components/MiniStatus'
 import { HashRouter as Router, Routes, Route } from 'react-router-dom'
@@ -18,16 +22,19 @@ function App() {
                 <ReminderCenter />
                 <SystemStatus />
                 <MiniStatus />
-                <main className="flex-1">
+                <main className="flex-1 app-main">
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/completed" element={<Completed />} />
+                        <Route path="/materials" element={<Materials />} />
+                        <Route path="/settings" element={<Settings />} />
+                        <Route path="/statistics" element={<Statistics />} />
                         <Route path="/archive" element={<Archive />} />
                     </Routes>
                 </main>
 
                 {/* Bottom indicator for iOS/Mobile */}
-                <div className="fixed bottom-0 left-0 right-0 h-1.5 bg-slate-900 pointer-events-none" />
+                <BottomNav />
             </div>
         </Router>
     )

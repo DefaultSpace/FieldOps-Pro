@@ -1,3 +1,4 @@
+import { defaultPreferences, validatePreferences } from '../utils/messageLibrary'
 import { REGION, isServiceArea, serviceNeighborhood } from '../config/region'
 import { fieldRecord, fieldState } from '../utils/fieldRecords'
 import { safeStorage } from '../utils/storage'
@@ -16,6 +17,8 @@ const generateUUID = () => globalThis.crypto?.randomUUID?.() || `field-${Date.no
 export const useServiceStore = create(persist((set,get) => ({
     technicianName:'',region:REGION.name,services:[],archive:[],activity:[],lastImport:null,lastDeleted:null,lastBackupAt:null,
     miniSync:null,
+    preferences:defaultPreferences(),
+    savePreferences:preferences=>set({preferences:validatePreferences(preferences)}),
     applyMiniOperation:(op,expected)=>set(state=>operationPatch(state,op,expected)),
     saveProfile:technicianName=>set({technicianName:technicianName.trim(),region:REGION.name}),
     importServices:records=> {
@@ -68,7 +71,7 @@ export const useServiceStore = create(persist((set,get) => ({
         const update=s=>{
             if(s.id!==id)return s;
             const merged={...s,...updates};
-            const type=updates.status && updates.status!==s.status?updates.status:
+            const type=updates.status && (updates.status!==s.status || (updates.status==='postponed' && updates.statusChangedAt!==s.statusChangedAt))?updates.status:
                 updates.timeSlot!==undefined && updates.timeSlot!==s.timeSlot?'schedule':
                 (updates.visitNote!==undefined && updates.visitNote!==s.visitNote)||(updates.notes!==undefined && updates.notes!==s.notes)?'note':null;
             return type?recordEvent(merged,type):merged;
@@ -76,13 +79,13 @@ export const useServiceStore = create(persist((set,get) => ({
         return {services:state.services.map(update),archive:state.archive.map(update)};
     }),
     restoreBackup:backup=>{
-        saveCheckpoint(get());const result=mergeBackup(get(),backup);set({services:result.services,archive:result.archive,activity:result.activity || get().activity});return result;
+        saveCheckpoint(get());const result=mergeBackup(get(),backup);set({services:result.services,archive:result.archive,activity:result.activity || get().activity,...(result.preferences?{preferences:result.preferences}:{})});return result;
     },
     exportData:()=>{
         const state=get(),now=Date.now();
-        if(globalThis.window?.FieldOpsMini){window.FieldOpsMini.postMessage(JSON.stringify({type:'export',data:JSON.stringify({version:3,exportedAt:now,s:state.services,a:state.archive,activity:state.activity})}));set({lastBackupAt:now});return;}
-        const blob=new Blob([JSON.stringify({version:3,exportedAt:now,s:state.services,a:state.archive,activity:state.activity})],{type:'application/json'});
+        if(globalThis.window?.FieldOpsMini){window.FieldOpsMini.postMessage(JSON.stringify({type:'export',data:JSON.stringify({version:3,exportedAt:now,s:state.services,a:state.archive,activity:state.activity,preferences:state.preferences})}));set({lastBackupAt:now});return;}
+        const blob=new Blob([JSON.stringify({version:3,exportedAt:now,s:state.services,a:state.archive,activity:state.activity,preferences:state.preferences})],{type:'application/json'});
         const url=URL.createObjectURL(blob),link=document.createElement('a');
         link.href=url;link.download=`fieldops-${dayKey(now)}.json`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);set({lastBackupAt:now});
     },
-}),{name:'routex-persist-v1',version:1,migrate:state=>fieldState(state),merge:(saved,current)=>({...current,...fieldState(saved||{})}),storage:createJSONStorage(()=>safeStorage),partialize:state=>({technicianName:state.technicianName,region:state.region,services:state.services.map(fieldRecord),archive:state.archive.map(fieldRecord),activity:state.activity,lastImport:state.lastImport,lastBackupAt:state.lastBackupAt,...(state.miniSync?{miniSync:state.miniSync}:{})})}));
+}),{name:'routex-persist-v1',version:1,migrate:state=>fieldState(state),merge:(saved,current)=>({...current,...fieldState(saved||{})}),storage:createJSONStorage(()=>safeStorage),partialize:state=>({preferences:state.preferences,technicianName:state.technicianName,region:state.region,services:state.services.map(fieldRecord),archive:state.archive.map(fieldRecord),activity:state.activity,lastImport:state.lastImport,lastBackupAt:state.lastBackupAt,...(state.miniSync?{miniSync:state.miniSync}:{})})}));

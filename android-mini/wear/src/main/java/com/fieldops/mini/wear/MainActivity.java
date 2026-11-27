@@ -80,7 +80,16 @@ public final class MainActivity extends Activity {
         boolean awaitingSnapshot=n!=null&&n.optString("result").equals("applied")&&n.optString("base").equals(row.optString("revision"));
         boolean enabled=fresh&&p==null&&!awaitingSnapshot&&row.optBoolean("actionable");
         button("Tamamlandı",()->new AlertDialog.Builder(this).setMessage("Fiş "+row.optString("receiptNo")+" tamamlandı olarak işaretlensin mi?").setPositiveButton("Tamamla",(d,w)->queue(row,"done","")).setNegativeButton("Vazgeç",null).show(),enabled);
-        button("Ertele",()->new AlertDialog.Builder(this).setTitle("Erteleme sebebi").setItems(new String[]{"Müşteri evde değil","Müşteri talebi","Parça / malzeme gerekiyor","Yeniden planlanacak"},(d,w)->queue(row,"postponed",new String[]{"Müşteri evde değil","Müşteri talebi","Parça / malzeme gerekiyor","Yeniden planlanacak"}[w])).setNegativeButton("Vazgeç",null).show(),enabled);
+        JSONArray configured=state.getJSONObject("snapshot").optJSONArray("postponeReasons");
+        java.util.ArrayList<String> reasons=new java.util.ArrayList<>();
+        if(configured==null){reasons.add("Müşteri evde yok");reasons.add("Telefona cevap vermiyor");}
+        else for(int i=0;i<configured.length();i++)reasons.add(configured.getString(i));
+        String[] choices=reasons.toArray(new String[0]);
+        button("Ertele",()->new AlertDialog.Builder(this).setTitle("Erteleme sebebi").setItems(choices,(d,w)->queue(row,"postponed",choices[w])).setNeutralButton("Özel sebep",(d,w)->{
+            EditText input=new EditText(this);input.setSingleLine(false);input.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(200)});
+            AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Erteleme sebebi").setView(input).setPositiveButton("Ertele",null).setNegativeButton("Vazgeç",null).create();
+            dialog.setOnShowListener(v->dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(b->{String reason=input.getText().toString().trim();if(reason.isEmpty()){input.setError("Sebep yaz");return;}queue(row,"postponed",reason);dialog.dismiss();}));dialog.show();
+        }).setNegativeButton("Vazgeç",null).show(),enabled);
     }
     private void queue(JSONObject row,String status,String reason){
         try{

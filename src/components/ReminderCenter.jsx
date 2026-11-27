@@ -6,6 +6,7 @@ export function ReminderCenter() {
     const [alerts, setAlerts] = useState([]);
     useEffect(() => {
         const check = () => {
+            if(window.FieldOpsMini)return;
             const store = useServiceStore.getState();
             const due = groupVisits(store.services.filter(s => dueReminder(s)));
             due.forEach(visit => {
