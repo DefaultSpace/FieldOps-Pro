@@ -32,7 +32,7 @@ try {
     assert.equal(await page.getByRole('button',{name:/Müşteriye ulaşıldı|Parça bekleniyor|Parça geldi/}).count(),0);
     await first.getByLabel('ÖRNEK MÜŞTERİ randevu saati').first().selectOption('14/16');
     await first.getByRole('button',{name:'Not ekle',exact:true}).click();await first.getByLabel('ÖRNEK MÜŞTERİ malzeme ve iş notu').fill('576101 2 adet pompa');await first.getByRole('button',{name:'Notu kaydet'}).click();
-    await page.locator('.optional-tools > summary').click();await page.locator('.materials-panel > summary').click();await page.getByLabel('576101 · 2 adet araçta hazır').check();
+    await page.getByRole('navigation',{name:'Ana gezinme'}).getByText('Malzeme',{exact:true}).click();await page.locator('.materials-panel > summary').click();await page.getByLabel('576101 · 2 adet araçta hazır').check();await page.getByRole('navigation',{name:'Ana gezinme'}).getByText('Bugün',{exact:true}).click();await page.locator('.optional-tools > summary').click();await first.getByRole('button',{name:'Ayrıntılar',exact:true}).click();
     assert.match(await page.locator('.daily-plan').innerText(),/Sıradaki öneri: İKİNCİ MÜŞTERİ/);
     await first.getByRole('button',{name:'Kapat',exact:true}).click();assert.equal(await first.getByRole('link').count(),1);assert.equal(await first.locator('.compact-details:visible').count(),0);assert.ok((await first.boundingBox()).height<310);
     await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:'test-artifacts/mobile.png',fullPage:true});
@@ -54,7 +54,7 @@ try {
     await reopened.getByRole('button',{name:'Kapanan işleri arşivle'}).click();
     await reopened.getByRole('button',{name:'eCom listesini aktar',exact:true}).click();await reopened.getByLabel('eCom servis listesi').fill(block('159000001','ÖRNEK MÜŞTERİ','10:00 - 12:00'));await reopened.getByLabel('Uyarıları inceledim').check();await reopened.getByRole('button',{name:'Listeyi aktar',exact:true}).click();await reopened.getByRole('button',{name:'Kapat',exact:true}).click();
     state=await reopened.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state);s=state.services.find(s=>s.receiptNo==='159000001');assert.equal(s.status,'pending');assert.ok(s.history.some(e=>e.type==='completed'&&e.visitNote.includes('Çevrimdışı not')));assert.ok(s.history.some(e=>e.type==='reopened'));assert.equal(state.archive.length,0);
-    await reopened.getByRole('button',{name:'Tüm günü sil'}).click();await reopened.reload();await reopened.getByRole('button',{name:'İşlem öncesi kopyadan eksikleri kurtar'}).click();await reopened.getByRole('button',{name:'Eksik kayıtları ekle'}).click();
+    await reopened.getByRole('button',{name:'Tüm günü sil'}).click();await reopened.reload();await reopened.getByRole('navigation',{name:'Ana gezinme'}).getByText('Ayarlar',{exact:true}).click();await reopened.getByRole('button',{name:'İşlem öncesi kopyadan eksikleri kurtar'}).click();await reopened.getByRole('button',{name:'Eksik kayıtları ekle'}).click();
     state=await reopened.evaluate(()=>JSON.parse(localStorage.getItem('routex-persist-v1')).state);assert.equal(state.services.length,2);
     assert.ok(await reopened.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
     const downloadPromise=reopened.waitForEvent('download');await reopened.getByRole('button',{name:'Yedek indir',exact:true}).click();const download=await downloadPromise;await download.saveAs('test-artifacts/backup.json');
@@ -106,6 +106,7 @@ try {
     assert.equal(personalState.technicianName,'Kendi İsmim');assert.equal(personalState.region,'Avcılar');
     assert.equal(personalState.services.find(s=>s.name==='ELLE EKLENEN').notes,'Kişisel saha notu');
     assert.equal(personalState.services.find(s=>s.name==='ELLE EKLENEN').district,'Avcılar');
+    await desktop.getByRole('navigation',{name:'Ana gezinme'}).getByText('Ayarlar',{exact:true}).click();
     await desktop.getByText('Son yedek indirme isteği:',{exact:false}).waitFor();
     // Upgrade from the previously deployed notification-only worker.
     const workerPath='dist/reminder-sw.js';const originalWorker=await readFile(workerPath,'utf8');

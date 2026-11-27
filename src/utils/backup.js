@@ -1,3 +1,4 @@
+import { validatePreferences } from './messageLibrary.js'
 import { fieldRecord } from './fieldRecords.js'
 import { uniqueRecords } from './workflow.js'
 const statuses=['pending','postponed','waiting_parts','done','cancelled'];
@@ -21,7 +22,7 @@ export function readBackup(text) {
         const result={}; for(const [key,value] of Object.entries(s)) if(!['__proto__','constructor','prototype'].includes(key)) result[key]=value;
         return fieldRecord(result);
     });
-    return {s:clean(data.s),a:clean(data.a),activity:validateHistory(data.activity || [])};
+    return {s:clean(data.s),a:clean(data.a),activity:validateHistory(data.activity || []),...(data.preferences?{preferences:validatePreferences(data.preferences)}:{})};
 }
 export function mergeBackup(state, backup) {
     const current=uniqueRecords([...state.services,...state.archive]);
@@ -30,5 +31,5 @@ export function mergeBackup(state, backup) {
     const active=take(backup.s.map(fieldRecord)), archived=take(backup.a.map(fieldRecord));
     const activity=[...(state.activity || [])];const events=new Set(activity.map(e=>e.id));
     for(const event of backup.activity || [])if(!events.has(event.id)){events.add(event.id);activity.push(event);}
-    return {services:[...state.services,...active],archive:[...state.archive,...archived],activity,added:active.length+archived.length,skipped:backup.s.length+backup.a.length-active.length-archived.length};
+    return {...(backup.preferences?{preferences:validatePreferences(backup.preferences)}:{}),services:[...state.services,...active],archive:[...state.archive,...archived],activity,added:active.length+archived.length,skipped:backup.s.length+backup.a.length-active.length-archived.length};
 }

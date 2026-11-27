@@ -38,7 +38,7 @@ Yerel kayıt hatası ekranda gösterilir. Okunamayan tarayıcı kaydının üzer
 
 Üretim sürümü HTTPS üzerinde bir kez açılıp **“Çevrimdışı açılış hazır”** göründükten sonra aynı cihaz/tarayıcıda bağlantısız yeniden açılabilir. Notlar yerelde kaydedilir. Yeni sürüm hazır olduğunda açık not ve formları kaydedip “Güncelle ve yeniden aç” seçilir.
 
-WhatsApp ve harita bağlantı gerektirir; mesajı kendin gönderirsin. Uygulama kapalıyken zamanında bildirim garantisi yoktur; geciken hatırlatıcı açılışta gösterilir. Harita araması bina numarasını korur, kat/daireyi çıkarır. Otomatik rota veya konum doğrulaması yapılmaz.
+WhatsApp ve harita bağlantı gerektirir; mesajı kendin gönderirsin. Web/PWA kapalıyken yerel alarm çalışmaz; geciken hatırlatıcı açılışta gösterilir. Android 0.3.0 sürümünde Sonra gel, kalıcı yerel Android alarmı kullanır; bildirim ve kesin alarm izinleri gerekir. Harita araması bina numarasını korur, kat/daireyi çıkarır. Otomatik rota veya konum doğrulaması yapılmaz.
 
 ## Geliştirme ve kontrol
 
@@ -60,8 +60,12 @@ Tarayıcı testleri sentetik kayıtlarla aktarım, elle kayıt, kişisel ayarlar
 
 ## Telefonda kurulu FieldOps Pro
 
-Android uygulamasının kaynakları `android-mini/` altındadır. Sürüm 0.2.0, güncel kişisel kullanım ekranlarını APK içinde taşır; GitHub Pages yayını telefondaki APK’yı otomatik güncellemez. Sürüm bilgisi uygulamanın durum satırında görünür.
+Android uygulamasının kaynakları `android-mini/` altındadır. Sürüm 0.3.0, güncel kişisel kullanım ekranlarını APK içinde taşır; GitHub Pages yayını telefondaki APK’yı otomatik güncellemez. Sürüm bilgisi uygulamanın durum satırında görünür.
 
 APK güncellemesi için önce JSON yedeği alınır. `npm run build:mini` ile ekranlar paketlenir, ardından aynı imzalama anahtarı ve `com.fieldops.mini` kimliğiyle yeni APK üretilip mevcut uygulamanın üzerine kurulur. Uygulama kaldırılmaz veya verileri temizlenmez. Özel imzalama anahtarları ve gerçek müşteri yedekleri Git’e eklenmez.
 
 [Android derleme ve kişisel saat bağlantısı](docs/FIELDOPS-MINI.md)
+
+## Teknisyen V2
+
+Sıradaki İş kartı, düzenlenebilir WhatsApp şablon kütüphanesi, iki başlangıç erteleme sebebi, dönemsel istatistikler ve beş sekmeli alt menü eklendi. Şablonlar/sebepler yedeğe dahildir. [Kullanım, doğrulama sonuçları ve cihaz kontrolü](docs/TEKNISYEN-V2.md).

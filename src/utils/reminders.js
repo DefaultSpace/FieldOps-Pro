@@ -1,9 +1,11 @@
-export function reminderTimestamp(time, now = new Date()) {
+export function reminderTimestamp(time, now = new Date(), selectedDate = '') {
     if (!/^\d{2}:\d{2}$/.test(time)) return null;
     const [hour, minute] = time.split(':').map(Number);
     if (hour > 23 || minute > 59) return null;
-    const date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+    const date = selectedDate || new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
     const timestamp = new Date(`${date}T${time}:00+03:00`).getTime();
+    if (!Number.isFinite(timestamp) || new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit'}).format(timestamp)!==date) return null;
     return Number.isFinite(timestamp) && timestamp > now.getTime() ? timestamp : null;
 }
 export function dueReminder(service, now = Date.now()) {

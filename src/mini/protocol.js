@@ -1,3 +1,4 @@
+import { defaultReasons } from '../utils/messageLibrary.js';
 import { completeRecords, dayKey, isOpen, todaysCompleted, uniqueRecords } from '../utils/workflow.js';
 import { recordEvent } from '../utils/history.js';
 
@@ -22,7 +23,7 @@ export async function snapshot(state, now = Date.now()) {
         return Number(!isOpen(a))-Number(!isOpen(b)) || time(a)-time(b) || String(a.name).localeCompare(String(b.name),'tr');
     });
     if (records.length > 1000) throw new Error('Saat listesi 1000 fiş sınırını aşıyor. Kapanan işleri arşivle.');
-    return {v:1, epoch:state.miniSync.epoch, generatedAt:now, day:dayKey(now), records:await Promise.all(records.map(async s => ({
+    return {v:1, postponeReasons:state.preferences?.reasons || defaultReasons, epoch:state.miniSync.epoch, generatedAt:now, day:dayKey(now), records:await Promise.all(records.map(async s => ({
         id:s.id, name:String(s.name || '').slice(0,500),
         address:[s.address,s.mahalle,s.district].filter(Boolean).join(' · ').slice(0,2500),
         timeSlot:String(s.timeSlot || s.sourceTimeSlot || '').slice(0,100),

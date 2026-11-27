@@ -5,7 +5,7 @@ function report(message){problem=message;if(typeof window!=='undefined')window.d
 export const storageProblem=()=>[problem,checkpointProblem].filter(Boolean).join(' ');
 export function saveCheckpoint(state) {
  if(unreadable)return;
- try {localStorage.setItem('fieldops-checkpoint',JSON.stringify({version:3,exportedAt:Date.now(),s:state.services,a:state.archive,activity:state.activity || []}));checkpointProblem='';report(problem);}
+ try {localStorage.setItem('fieldops-checkpoint',JSON.stringify({version:3,exportedAt:Date.now(),s:state.services,a:state.archive,activity:state.activity || [],preferences:state.preferences}));checkpointProblem='';report(problem);}
  catch {checkpointProblem='İşlem öncesi yerel kurtarma kopyası kaydedilemedi. Yedek indir ile kayıtlarını al.';report(problem);}
 }
 export function readCheckpoint(){try{return localStorage.getItem('fieldops-checkpoint');}catch{return null;}}

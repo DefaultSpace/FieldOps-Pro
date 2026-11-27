@@ -64,19 +64,25 @@ public final class MainActivity extends Activity {
                 try{handle(new JSONObject(raw),reply);}catch(Exception e){respond(reply,jsonError("Eşitleme kaydedilemedi. Kayıtlar korunuyor; bağlantıyı ve boş alanı kontrol et."));}
             });
         });
-        web.loadUrl(ORIGIN+"/assets/web/index.html");
+        web.loadUrl(ORIGIN+"/assets/web/index.html"+visitFragment(getIntent()));
         Sync.schedule(this);
     }
     private void handle(JSONObject message,JavaScriptReplyProxy reply)throws Exception{
         Vault vault=new Vault(this);
         switch(message.optString("type")){
+            case "reminders":{
+                Reminders.replace(this,message.getJSONArray("value"));respond(reply,Reminders.status(this).put("plan",message.getJSONArray("value")));break;
+            }
+            case "reminderPermission":{
+                runOnUiThread(()->requestReminderPermission());break;
+            }
             case "snapshot":{
                 if(message.toString().getBytes(StandardCharsets.UTF_8).length>Protocol.MAX_SNAPSHOT)throw new IOException();
                 JSONObject incoming=message.getJSONObject("value");if(!Protocol.snapshot(incoming))throw new IOException();
                 AtomicBoolean changed=new AtomicBoolean(false);
                 vault.change(s->{
                     JSONObject previous=s.optJSONObject("snapshot");
-                    if(previous!=null&&previous.optString("epoch").equals(incoming.optString("epoch"))&&previous.getJSONArray("records").toString().equals(incoming.getJSONArray("records").toString())&&previous.optString("day").equals(incoming.optString("day"))&&incoming.getLong("generatedAt")-previous.optLong("generatedAt")<60_000)return;
+                    if(previous!=null&&previous.optString("epoch").equals(incoming.optString("epoch"))&&previous.getJSONArray("records").toString().equals(incoming.getJSONArray("records").toString())&&Objects.equals(String.valueOf(previous.optJSONArray("postponeReasons")),String.valueOf(incoming.optJSONArray("postponeReasons")))&&previous.optString("day").equals(incoming.optString("day"))&&incoming.getLong("generatedAt")-previous.optLong("generatedAt")<60_000)return;
                     incoming.put("sequence",s.optLong("sequence")+1);s.put("sequence",incoming.getLong("sequence"));s.put("snapshot",incoming);
                     changed.set(true);
                 });
@@ -100,6 +106,17 @@ public final class MainActivity extends Activity {
             default:throw new IOException();
         }
     }
+    private String visitFragment(Intent intent){String id=intent.getStringExtra("visitId");return id==null?"":"#/?visit="+Uri.encode(id);}
+    @Override protected void onNewIntent(Intent intent){super.onNewIntent(intent);setIntent(intent);if(web!=null)web.loadUrl(ORIGIN+"/assets/web/index.html"+visitFragment(intent));}
+    private void requestReminderPermission(){
+        if(Build.VERSION.SDK_INT>=33&&checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)!=android.content.pm.PackageManager.PERMISSION_GRANTED){requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},20);return;}
+        try {
+            if(!Reminders.exact(this))startActivity(new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,Uri.parse("package:"+getPackageName())));
+            else if(!Reminders.status(this).optBoolean("notifications"))startActivity(new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(android.provider.Settings.EXTRA_APP_PACKAGE,getPackageName()));
+            else toast("Bildirim ve kesin alarm izinleri açık. Galaxy Wearable içinde FieldOps bildirimlerini de etkinleştir.");
+        }catch(Exception e){toast("Telefon ayarlarından FieldOps bildirim ve alarm izinlerini kontrol et.");}
+    }
+    @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(request==20&&results.length>0&&results[0]==android.content.pm.PackageManager.PERMISSION_GRANTED)requestReminderPermission();}
     private JSONObject jsonError(String message){try{return new JSONObject().put("type","error").put("message",message);}catch(JSONException impossible){throw new IllegalStateException(impossible);}}
     private void respond(JavaScriptReplyProxy reply,JSONObject message){runOnUiThread(()->{if(!isDestroyed()&&WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER))reply.postMessage(message.toString());});}
     private void toast(String text){runOnUiThread(()->Toast.makeText(this,text,Toast.LENGTH_LONG).show());}
@@ -117,7 +134,7 @@ public final class MainActivity extends Activity {
             }catch(Exception e){toast("Yedek kaydedilemedi. Yeniden dene.");}
         });}
     }
-    @Override protected void onResume(){super.onResume();Sync.schedule(this);if(web!=null)web.onResume();}
+    @Override protected void onResume(){super.onResume();Sync.schedule(this);if(web!=null)web.onResume();io.execute(()->{try{Reminders.restore(this);}catch(Exception e){toast("Hatırlatıcı planı okunamadı. Uygulamadaki saatleri kontrol et.");}});}
     @Override protected void onPause(){if(web!=null)web.onPause();super.onPause();}
     @Override public void onBackPressed(){if(web.canGoBack())web.goBack();else super.onBackPressed();}
     @Override protected void onDestroy(){if(fileCallback!=null)fileCallback.onReceiveValue(null);web.destroy();io.shutdown();super.onDestroy();}
